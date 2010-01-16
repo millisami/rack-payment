@@ -31,6 +31,9 @@ env['ractivemerchant'] will be used for passing data within single requests.
 For instance, after a POST to /purchase, you'll be able to get the actual 
 ActiveMerchant response object(s) via env['ractivemerchant'], if you want them.
 
+All of the env variables can be accessed more easily via helper methods that 
+can easily be included via a module.  We'll copy what we did with Rack::OAuth.
+
 Also, it should be really easy to write your integration specs with this.  
 If people use a BogusGateway, everything should "just work."
 
