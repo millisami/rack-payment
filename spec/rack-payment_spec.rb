@@ -53,6 +53,7 @@ describe Rack::Payment do
     it 'should be able to make a successful purchase (MOST IMPORTANT)' do
       class SimpleApp < Sinatra::Base
 
+        use Rack::Session::Cookie # <-- needs to blow up if this isn't available
         use Rack::Payment, ActiveMerchant::Billing::BogusGateway.new
 
         helpers do
@@ -107,8 +108,8 @@ describe Rack::Payment do
 
       # if all went well, we should be on the order confirmation page ... the app's or one in the middleware
 
-      last_response.should include('Order successful')
-      last_response.should include('9.95')
+      last_response.should contain('Order successful')
+      last_response.should contain('9.95')
     end
 
   end

@@ -57,21 +57,40 @@ module Rack #:nodoc:
     def call env
       env['rack.payment'] = self # make this instance of Rack::Payment available
 
+      request = Rack::Request.new(env)
+
+      puts "#call #{ request.request_method } #{ request.path_info }"
+
       raw_response = @app.call env
       app_response = Rack::Response.new raw_response[2], raw_response[0], raw_response[1]
 
       if app_response.status == 402
 
+        # check for payment.amount ... should blow up if not set
+        env['rack.session']['rack.payment'] ||= {}
+        env['rack.session']['rack.payment']['amount'] = env['rack.payment.data'].amount
+
         # Payment Required!
         return credit_card_and_billing_info_response
+
+      elsif request.path_info == '/rack-payment-processing'
+
+        # Try to process the request
+        return process_credit_card(env)
 
       end
 
       app_response.finish
     end
 
+    def process_credit_card env
+      # assume OK
+      amount = env['rack.session']['rack.payment']['amount']
+      [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+    end
+
     def credit_card_and_billing_info_response
-      html = "<form action='/' method='post'>"
+      html = "<form action='/rack-payment-processing' method='post'>"
 
       %w( first_name last_name number cvv expiration_month expiration_year ).each do |field|
         html += "<input type='text' name='credit_card_#{field}' />"
