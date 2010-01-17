@@ -31,8 +31,76 @@ module Rack #:nodoc:
 
     end
 
+    class CreditCard
+      attr_accessor :active_merchant_card
+
+      def initialize
+        @active_merchant_card ||= ActiveMerchant::Billing::CreditCard.new
+      end
+
+      def method_missing name, *args, &block
+        if active_merchant_card.respond_to?(name)
+          active_merchant_card.send(name, *args, &block)
+        else
+          super
+        end
+      end
+
+      def partially_filled_out?
+        %w( type number verification_value month year first_name last_name ).each do |field|
+          return true unless send(field).nil?
+        end
+
+        return false
+      end
+
+      def update options
+        options.each {|key, value| send "#{key}=", value }
+      end
+
+      # Aliases
+
+      def cvv()       verification_value         end
+      def cvv=(value) verification_value=(value) end
+
+      def expiration_year()       year         end
+      def expiration_year=(value) year=(value) end
+
+      def expiration_month()       month         end
+      def expiration_month=(value) month=(value) end
+
+      def type
+        active_merchant_card.type
+      end
+
+    end
+
+    class BillingAddress
+      attr_accessor :name, :address1, :city, :state, :zip, :country
+
+      def update options
+        options.each {|key, value| send "#{key}=", value }
+      end
+
+      def partially_filled_out?
+        %w( name address1 city state zip country ).each do |field|
+          return true unless send(field).nil?
+        end
+
+        return false
+      end
+    end
+
     class Data
-      attr_accessor :amount, :capture_response, :authorize_response
+      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address
+
+      def credit_card
+        @credit_card ||= CreditCard.new
+      end
+
+      def billing_address
+        @billing_address ||= BillingAddress.new
+      end
 
       def amount= value
         @amount = BigDecimal(value.to_s)
@@ -40,6 +108,10 @@ module Rack #:nodoc:
 
       def amount_in_cents
         (amount * 100).to_i if amount
+      end
+
+      def card_or_address_partially_filled_out?
+        credit_card.partially_filled_out? or billing_address.partially_filled_out?
       end
     end
 
@@ -77,12 +149,21 @@ module Rack #:nodoc:
 
       if app_response.status == 402
 
+        payment = env['rack.payment.data']
+
         # check for payment.amount ... should blow up if not set
         env['rack.session']['rack.payment'] ||= {}
-        env['rack.session']['rack.payment']['amount'] = env['rack.payment.data'].amount
+        env['rack.session']['rack.payment']['amount'] = payment.amount
 
-        # Payment Required!
-        return credit_card_and_billing_info_response env
+        if payment.card_or_address_partially_filled_out?
+
+          # You've filled stuff out!  Try to process ...
+          return process_credit_card(env)
+        else
+
+          # Payment Required!
+          return credit_card_and_billing_info_response env
+        end
 
       elsif request.path_info == '/rack-payment-processing'
 
@@ -95,31 +176,32 @@ module Rack #:nodoc:
     end
 
     def process_credit_card env
-
-      errors   = []
-      required = %w( credit_card_number credit_card_first_name credit_card_last_name )
-      params   = Rack::Request.new(env).params
-      required.each do |field|
-        value = params[field]
-        errors << "#{ field } is required" if value.nil? or value.empty?
-      end
-      
       env['rack.payment.data'] ||= Rack::Payment::Data.new
       payment = env['rack.payment.data']
       payment.amount ||= env['rack.session']['rack.payment']['amount']
 
+      unless payment.card_or_address_partially_filled_out?
+        Rack::Request.new(env).params.each do |field, value|
+          if field =~ /^credit_card_(\w+)/
+            payment.credit_card.update $1 => value
+          elsif field =~ /billing_address_(\w+)/
+            payment.billing_address.update $1 => value
+          end 
+        end
+      end
+
+      # TODO move errors into CreditCard and BillingAddress objects
+      errors   = []
+      required = %w( number first_name last_name )
+      required.each do |field|
+        value = payment.credit_card.send(field)
+        errors << "#{ field } is required" if value.nil? or value.empty?
+      end
+
       if errors.empty?
 
         # All looks good ... try to process it!
-        card = ActiveMerchant::Billing::CreditCard.new(
-            :type               => params['credit_card_type'],
-            :number             => params['credit_card_number'],
-            :verification_value => params['credit_card_cvv'],
-            :month              => params['credit_card_expiration_month'],
-            :year               => params['credit_card_expiration_year'],
-            :first_name         => params['credit_card_first_name'],
-            :last_name          => params['credit_card_last_name']
-        )
+        card = payment.credit_card.active_merchant_card
 
         payment.authorize_response = gateway.authorize payment.amount_in_cents, card
 

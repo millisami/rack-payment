@@ -85,6 +85,51 @@ class SimpleAppWithOnSuccessOverridden < Sinatra::Base
   end
 end
 
+class SimpleAppWithOwnCreditCardPage < Sinatra::Base
+
+  class << self
+    attr_accessor :gateway
+  end
+
+  @gateway = ActiveMerchant::Billing::BogusGateway.new
+
+  use Rack::Session::Cookie # <-- needs to blow up if this isn't available
+  use Rack::Payment, gateway
+
+  helpers do
+    include Rack::Payment::Methods
+  end
+
+  get '/' do
+    html = "<h1>Custom Page</h1>"
+    html += "<form action='/' method='post'>"
+    html += "<input type='text' id='monies' name='monies' />"
+    %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field|
+      full_field = "credit_card[#{field}]"
+      html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
+    end
+
+    %w( name address1 city state country zip ).each do |field|
+      full_field = "address[#{ field }]"
+      html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
+    end
+    html += "<input type='submit' value='Purchase' />"
+    html += "</form>"
+
+    html
+  end
+
+  post '/' do
+    payment.amount = params[:monies]
+
+    # raise params[:credit_card].inspect
+    payment.credit_card.update     params[:credit_card]
+    payment.billing_address.update params[:address]
+
+    [ 402, {}, ['Payment Required'] ]
+  end
+end
+
 def fill_in_invalid_credit_card fields = {}
   fill_in_credit_card({:number => '2'}.merge(fields))
 end
@@ -238,8 +283,57 @@ describe Rack::Payment do
       last_response.should_not contain('Order successful')
       last_response.should contain('w00t!  Success!')
       last_response.should contain('9.95 (995)')
-      last_response.should contain('@params={"authorized_amount"=>"995"}, @success=true') # part of authorization response
-      last_response.should contain('@params={"paid_amount"=>"995"}, @success=true')       # part of capture response
+      last_response.should contain('@params={"authorized_amount"=>"995"}') # part of authorization response
+      last_response.should contain('@params={"paid_amount"=>"995"}')       # part of capture response
+    end
+
+    it 'should be able to use my own page(s) for filling out credit card / billing info' do
+      set_rack_app SimpleAppWithOwnCreditCardPage.new
+
+      visit '/'
+      last_response.should contain('Custom Page')
+      fill_in :monies, :with => 15.95 # it has the money and credit card info, all on the same page
+
+      # custom form with different field names ...
+      { 
+        :first_name       => 'remi',
+        :last_name        => 'taylor',
+        :number           => '1',     # 1 is valid using the BogusGateway
+        :cvv              => '123',
+        :expiration_month => '01',
+        :expiration_year  => '2015',
+        :type             => 'visa'
+      }.each { |key, value| fill_in "credit_card[#{key}]", :with => value.to_s }
+      { 
+        :name     => 'remi',
+        :address1 => '123 Chunky Bacon St.',
+        :city     => 'Magical Land',
+        :state    => 'NY',
+        :country  => 'US',
+        :zip      => '12345'
+      }.each { |key, value| fill_in "address[#{key}]", :with => value.to_s }
+
+      click_button 'Purchase'
+
+      last_response.should contain('Order successful')
+      last_response.should contain('15.95')
+    end
+
+    it 'if i use my own page for filling out credit card / billing info, that page should be re-rendered if errors occur' do
+      pending
+
+      # ...
+
+      last_response.should_not contain('Order successful')
+      raise last_response.body.inspect
+      last_response.should contain('failure')
+      last_response.should contain('Custom Page')
+
+      fill_in :credit_card_number, :with => '1' # <--- valid number
+      click_button 'Purchase'
+
+      last_response.should contain('Order successful') # regular old order successful page
+      last_response.should contain('15.95')
     end
 
     it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
