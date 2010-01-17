@@ -49,6 +49,42 @@ class SimpleApp < Sinatra::Base
   end
 end
 
+class SimpleAppWithOnSuccessOverridden < Sinatra::Base
+
+  class << self
+    attr_accessor :gateway
+  end
+
+  @gateway = ActiveMerchant::Billing::BogusGateway.new
+
+  use Rack::Session::Cookie # <-- needs to blow up if this isn't available
+  use Rack::Payment, gateway, :on_success => '/custom_success_page'
+
+  helpers do
+    include Rack::Payment::Methods
+  end
+
+  get '/' do
+    %{
+      <form action='/' method='post'>
+        <input type='text' id='monies' name='monies' />
+        <input type='submit' value='Checkout' />
+      </form>
+     }
+  end
+
+  post '/' do
+    payment.amount = params[:monies]
+    [ 402, {}, ['Payment Required'] ]
+  end
+
+  get '/custom_success_page' do
+    "w00t!  Success!  You should have been charged #{ payment.amount } (#{ payment.amount_in_cents }).  " + 
+    "Raw capture response: #{ payment.capture_response.inspect }.  " + 
+    "Raw authoriziation request: #{ payment.authorize_response.inspect }"
+  end
+end
+
 def fill_in_invalid_credit_card fields = {}
   fill_in_credit_card({:number => '2'}.merge(fields))
 end
@@ -180,6 +216,33 @@ describe Rack::Payment do
     end
 
     it 'should get errors if there was a problem capturing payment'
+
+    it 'should be able to specify a different page to render on_success (which can display the transaction response)' do
+      set_rack_app SimpleAppWithOnSuccessOverridden.new
+
+      visit '/'
+      fill_in :monies, :with => 9.95
+      click_button 'Checkout'
+
+      fill_in_invalid_credit_card
+      fill_in_valid_billing_address
+      click_button 'Purchase'
+
+      last_response.should_not contain('Order successful')
+      #last_response.should contain('Invalid credit card')
+      last_response.should contain('failure')
+
+      fill_in :credit_card_number, :with => '1' # <--- valid number
+      click_button 'Purchase'
+
+      last_response.should_not contain('Order successful')
+      last_response.should contain('w00t!  Success!')
+      last_response.should contain('9.95 (995)')
+      last_response.should contain('@params={"authorized_amount"=>"995"}, @success=true') # part of authorization response
+      last_response.should contain('@params={"paid_amount"=>"995"}, @success=true')       # part of capture response
+    end
+
+    it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
 
   end
 

@@ -32,10 +32,14 @@ module Rack #:nodoc:
     end
 
     class Data
-      attr_accessor :amount
+      attr_accessor :amount, :capture_response, :authorize_response
 
       def amount= value
         @amount = BigDecimal(value.to_s)
+      end
+
+      def amount_in_cents
+        (amount * 100).to_i if amount
       end
     end
 
@@ -44,6 +48,8 @@ module Rack #:nodoc:
     attr_accessor :app
 
     attr_accessor :gateway
+
+    attr_accessor :on_success
 
     # @param [#call] Rack application
     # @param [#purchase] {ActiveMerchant::Billing::Gateway}
@@ -98,8 +104,9 @@ module Rack #:nodoc:
         errors << "#{ field } is required" if value.nil? or value.empty?
       end
       
-      amount = env['rack.session']['rack.payment']['amount'] # from session (only secure way)
-      amount_in_cents = (amount * 100).to_i
+      env['rack.payment.data'] ||= Rack::Payment::Data.new
+      payment = env['rack.payment.data']
+      payment.amount ||= env['rack.session']['rack.payment']['amount']
 
       if errors.empty?
 
@@ -114,15 +121,24 @@ module Rack #:nodoc:
             :last_name          => params['credit_card_last_name']
         )
 
-        authorize_response = gateway.authorize amount_in_cents, card
+        payment.authorize_response = gateway.authorize payment.amount_in_cents, card
 
-        if authorize_response.success?
+        if payment.authorize_response.success?
 
-          capture_response = gateway.capture amount_in_cents, authorize_response.authorization
-          [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+          payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
+
+          if on_success
+            new_env = env.clone
+            new_env['PATH_INFO'] = on_success
+            new_env['REQUEST_METHOD'] = 'GET'
+
+            @app.call new_env
+          else
+            [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
+          end
 
         else
-          credit_card_and_billing_info_response env, [authorize_response.message]
+          credit_card_and_billing_info_response env, [payment.authorize_response.message]
         end
 
       else
