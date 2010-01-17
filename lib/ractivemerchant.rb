@@ -97,6 +97,11 @@ class RActiveMerchant
     # put this instance of RActiveMerchant in the env so it's accessible from the application
     env[instance_env_variable] = self
 
+    app_response = @app.call(env)
+    if app_response[0] == 402 # Payment Required
+      raise 'payment required!'
+    end
+
     path   = env['PATH_INFO']
     method = env['REQUEST_METHOD']
 
@@ -104,7 +109,7 @@ class RActiveMerchant
     when purchase_path # will need to check for GET or POST ...
       do_purchase(env)
     else
-      @app.call(env)
+      app_response
     end
   end
 
