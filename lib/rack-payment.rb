@@ -1,5 +1,6 @@
 require 'active_merchant'
 require 'rack'
+require 'bigdecimal'
 
 module Rack #:nodoc:
 
@@ -32,6 +33,10 @@ module Rack #:nodoc:
 
     class Data
       attr_accessor :amount
+
+      def amount= value
+        @amount = BigDecimal(value.to_s)
+      end
     end
 
     DEFAULT_OPTIONS = { }
@@ -94,9 +99,29 @@ module Rack #:nodoc:
       end
       
       amount = env['rack.session']['rack.payment']['amount'] # from session (only secure way)
+      amount_in_cents = (amount * 100).to_i
 
       if errors.empty?
-        [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+
+        # All looks good ... try to process it!
+        card = ActiveMerchant::Billing::CreditCard.new(
+            :type               => params['credit_card_type'],
+            :number             => params['credit_card_number'],
+            :verification_value => params['credit_card_cvv'],
+            :month              => params['credit_card_expiration_month'],
+            :year               => params['credit_card_expiration_year'],
+            :first_name         => params['credit_card_first_name'],
+            :last_name          => params['credit_card_last_name']
+        )
+
+        authorize_response = gateway.authorize amount_in_cents, card
+
+        if authorize_response.success?
+          [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+        else
+          credit_card_and_billing_info_response env, [response.message]
+        end
+
       else
         credit_card_and_billing_info_response env, errors
       end
@@ -113,7 +138,7 @@ module Rack #:nodoc:
 
       html += "<form action='/rack-payment-processing' method='post'>"
 
-      %w( first_name last_name number cvv expiration_month expiration_year ).each do |field|
+      %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field|
         full_field = "credit_card_#{field}"
         html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
       end
