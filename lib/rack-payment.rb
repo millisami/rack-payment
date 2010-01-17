@@ -3,83 +3,42 @@ require 'rack'
 
 module Rack #:nodoc:
 
-  # Rack middleware for easily integrating {ActiveMerchant} purchases 
-  # into you application.
-  #
-  # This does NOT provide a shopping cart and it is not aware of your 
-  # website's products.  This merely gives you a relative URL that 
-  # your application can POST to which will, given the variables, 
-  # make a purchase using the {ActiveMerchant::Billing::Gateway} 
-  # that you provide.
-  #
-  # This also provides a relative URL that you can redirect to and 
-  # it will display a form with the appropriate fields to allow 
-  # a user to make a purchase.  This is a sample page and it's 
-  # assumed that most applications will actually override this 
-  # by providing you own page.  This page does work though!
-  #
-  # See specs for usage
-  #
   class Payment
 
-    # These fields must be in the POST to purchase_path
-    REQUIRED_PURCHASE_FIELDS = %w( credit_card_number credit_card_cvv )
+    module Methods
 
-    # Default options that are passed to RActiveMerchant instances when initialized.
-    DEFAULT_OPTIONS = {
-      :path_prefix           => '/ractivemerchant',
-      :purchase_path         => '/purchase',
-      :purchase_form_path    => '/purchase',
-      :on_success_path       => '/confirmation',
-      :on_error_path         => '/error',
-      :instance_env_variable => 'rack.ractivemerchant.instance',
-      :data_env_variable     => 'rack.ractivemerchant.data'
-    }
+      def payment
+        payment_request_env['rack.payment.data'] ||= Rack::Payment::Data.new
+      end
+
+      # [Internal] this method returns the Rack 'env' for the current request.
+      #
+      # This looks for #env or #request.env by default.  If these don't return 
+      # something, then we raise an exception and you should override this method 
+      # so it returns the Rack env that we need.
+      #
+      # TODO lots of middleware might use a method like this ... refactor out?
+      def payment_request_env
+        if respond_to?(:env)
+          env
+        elsif respond_to?(:request) and request.respond_to?(:env)
+          request.env
+        else
+          raise "Couldn't find 'env' ... please override #payment_request_env"
+        end
+      end
+
+    end
+
+    class Data
+      attr_accessor :amount
+    end
+
+    DEFAULT_OPTIONS = { }
 
     attr_accessor :app
 
     attr_accessor :gateway
-
-    attr_accessor :instance_env_variable
-
-    attr_accessor :data_env_variable
-
-    attr_accessor :path_prefix
-
-    # Writer methods for paths.  Getters are overriden.
-    attr_writer :purchase_path, :purchase_form_path, :on_success_path, :on_error_path
-
-    def purchase_path
-      if @purchase_path == DEFAULT_OPTIONS[:purchase_path]
-        File.join path_prefix, @purchase_path
-      else
-        @purchase_path
-      end
-    end
-
-    def purchase_form_path
-      if @purchase_form_path == DEFAULT_OPTIONS[:purchase_form_path]
-        File.join path_prefix, @purchase_form_path
-      else
-        @purchase_form_path
-      end
-    end
-
-    def on_success_path
-      if @on_success_path == DEFAULT_OPTIONS[:on_success_path]
-        File.join path_prefix, @on_success_path
-      else
-        @on_success_path
-      end
-    end
-
-    def on_error_path
-      if @on_error_path == DEFAULT_OPTIONS[:on_error_path]
-        File.join path_prefix, @on_error_path
-      else
-        @on_error_path
-      end
-    end
 
     # @param [#call] Rack application
     # @param [#purchase] {ActiveMerchant::Billing::Gateway}
@@ -96,40 +55,36 @@ module Rack #:nodoc:
 
     # @param [Hash] The Rack Request environment variables
     def call env
-      # put this instance of RActiveMerchant in the env so it's accessible from the application
-      env[instance_env_variable] = self
+      env['rack.payment'] = self # make this instance of Rack::Payment available
 
-      app_response = @app.call(env)
-      if app_response[0] == 402 # Payment Required
-        raise 'payment required!'
+      raw_response = @app.call env
+      app_response = Rack::Response.new raw_response[2], raw_response[0], raw_response[1]
+
+      if app_response.status == 402
+
+        # Payment Required!
+        return credit_card_and_billing_info_response
+
       end
 
-      path   = env['PATH_INFO']
-      method = env['REQUEST_METHOD']
-
-      case path
-      when purchase_path # will need to check for GET or POST ...
-        do_purchase(env)
-      else
-        app_response
-      end
+      app_response.finish
     end
 
-    def do_purchase env
-      request = Rack::Request.new(env)
+    def credit_card_and_billing_info_response
+      html = "<form action='/' method='post'>"
 
-      errors = REQUIRED_PURCHASE_FIELDS.inject([]) do |errors, field|
-        errors << "#{ field } is required" unless request.params[field]
-        errors
+      %w( first_name last_name number cvv expiration_month expiration_year ).each do |field|
+        html += "<input type='text' name='credit_card_#{field}' />"
       end
 
-      if errors.empty?
-        [200, {}, ["All is well"]]
-      else
-        env[data_env_variable] ||= {}
-        env[data_env_variable]['errors'] = errors
-        @app.call env
+      %w( name address1 city state country zip ).each do |field|
+        html += "<input type='text' name='billing_address_#{field}' />"
       end
+
+      html += "<input type='submit' value='Purchase' />"
+      html += "</form>"
+      
+      [ 200, {'Content-Type' => 'text/html'}, html ]
     end
 
   end

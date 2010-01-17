@@ -51,9 +51,13 @@ describe Rack::Payment do
   describe 'high level integration' do
 
     it 'should be able to make a successful purchase (MOST IMPORTANT)' do
-      pending 'refactoring, then coming back to this'
       class SimpleApp < Sinatra::Base
+
         use Rack::Payment, ActiveMerchant::Billing::BogusGateway.new
+
+        helpers do
+          include Rack::Payment::Methods
+        end
 
         get '/' do
           %{
@@ -61,11 +65,12 @@ describe Rack::Payment do
               <input type='text' id='monies' name='monies' />
               <input type='submit' value='Checkout' />
             </form>
-          }
+           }
         end
 
         post '/' do
-          [ 402, { 'Payment-Amount' => "#{ params[:monies] } USD" }, ['Payment Required'] ] # 402 Payment Required:w
+          payment.amount = params[:monies]
+          [ 402, {}, ['Payment Required'] ]
         end
       end
 
