@@ -18,12 +18,60 @@ module Rack::Test::Methods
   end
 end
 
+# todo ... move example apps to different files?  maybe?
+class SimpleApp < Sinatra::Base
+
+  use Rack::Session::Cookie # <-- needs to blow up if this isn't available
+  use Rack::Payment, ActiveMerchant::Billing::BogusGateway.new
+
+  helpers do
+    include Rack::Payment::Methods
+  end
+
+  get '/' do
+    %{
+      <form action='/' method='post'>
+        <input type='text' id='monies' name='monies' />
+        <input type='submit' value='Checkout' />
+      </form>
+     }
+  end
+
+  post '/' do
+    payment.amount = params[:monies]
+    [ 402, {}, ['Payment Required'] ]
+  end
+end
+
+def fill_in_valid_credit_card fields = {}
+  { 
+    :first_name       => 'remi',
+    :last_name        => 'taylor',
+    :number           => '1',     # 1 is valid using the BogusGateway
+    :cvv              => '123',
+    :expiration_month => '01',
+    :expiration_year  => '2015' 
+  }.merge(fields).each { |key, value| fill_in "credit_card_#{key}", :with => value.to_s }
+end
+
+def fill_in_valid_billing_address
+  { 
+    :name     => 'remi',
+    :address1 => '123 Chunky Bacon St.',
+    :city     => 'Magical Land',
+    :state    => 'NY',
+    :country  => 'US',
+    :zip      => '12345'
+  }.each { |key, value| fill_in "billing_address_#{key}", :with => value.to_s }
+end
+
 describe Rack::Payment do
 
   # for integration testing
   include Rack::Test::Methods
   include Webrat::Methods
   include Webrat::Matchers
+
 
   describe 'configuration' do
 
@@ -50,67 +98,45 @@ describe Rack::Payment do
 
   describe 'high level integration' do
 
-    it 'should be able to make a successful purchase (MOST IMPORTANT)' do
-      class SimpleApp < Sinatra::Base
-
-        use Rack::Session::Cookie # <-- needs to blow up if this isn't available
-        use Rack::Payment, ActiveMerchant::Billing::BogusGateway.new
-
-        helpers do
-          include Rack::Payment::Methods
-        end
-
-        get '/' do
-          %{
-            <form action='/' method='post'>
-              <input type='text' id='monies' name='monies' />
-              <input type='submit' value='Checkout' />
-            </form>
-           }
-        end
-
-        post '/' do
-          payment.amount = params[:monies]
-          [ 402, {}, ['Payment Required'] ]
-        end
-      end
-
+    before do
       set_rack_app SimpleApp.new
+    end
 
-      # visit some fake page where we 'checkout' from to start the middleware process!
+    it 'should be able to make a successful purchase (MOST IMPORTANT)' do
       visit '/'
       fill_in :monies, :with => 9.95
       click_button 'Checkout'
 
-      # this should take us to either the app's screen or the checkout screen we supply out of the box      
-
-      # credit card
-      { 
-        :first_name       => 'remi',
-        :last_name        => 'taylor',
-        :number           => '1',     # 1 is valid using the BogusGateway
-        :cvv              => '123',
-        :expiration_month => '01',
-        :expiration_year  => '2015' 
-      }.each { |key, value| fill_in "credit_card_#{key}", :with => value.to_s }
-
-      # billing address
-      { 
-        :name     => 'remi',
-        :address1 => '123 Chunky Bacon St.',
-        :city     => 'Magical Land',
-        :state    => 'NY',
-        :country  => 'US',
-        :zip      => '12345'
-      }.each { |key, value| fill_in "billing_address_#{key}", :with => value.to_s }
-
+      fill_in_valid_credit_card
+      fill_in_valid_billing_address
       click_button 'Purchase'
-
-      # if all went well, we should be on the order confirmation page ... the app's or one in the middleware
 
       last_response.should contain('Order successful')
       last_response.should contain('9.95')
     end
+
+    it 'should get errors if not all required fields are given (and it lets us fix the fields)' do
+      visit '/'
+      fill_in :monies, :with => 9.95
+      click_button 'Checkout'
+
+      fill_in_valid_credit_card :first_name => nil
+      fill_in_valid_billing_address
+      click_button 'Purchase'
+
+      last_response.should_not contain('Order successful')
+      last_response.should contain('first_name is required')
+
+      fill_in :credit_card_first_name, :with => 'remi'
+      click_button 'Purchase'
+
+      last_response.should contain('Order successful')
+      last_response.should contain('9.95')
+    end
+
+    it 'should get errors if the credit card is not valid'
+
+    it 'should get errors if there was a problem processing payment'
 
   end
 

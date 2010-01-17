@@ -71,7 +71,7 @@ module Rack #:nodoc:
         env['rack.session']['rack.payment']['amount'] = env['rack.payment.data'].amount
 
         # Payment Required!
-        return credit_card_and_billing_info_response
+        return credit_card_and_billing_info_response env
 
       elsif request.path_info == '/rack-payment-processing'
 
@@ -84,20 +84,43 @@ module Rack #:nodoc:
     end
 
     def process_credit_card env
-      # assume OK
-      amount = env['rack.session']['rack.payment']['amount']
-      [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+
+      errors   = []
+      required = %w( credit_card_number credit_card_first_name credit_card_last_name )
+      params   = Rack::Request.new(env).params
+      required.each do |field|
+        value = params[field]
+        errors << "#{ field } is required" if value.nil? or value.empty?
+      end
+      
+      amount = env['rack.session']['rack.payment']['amount'] # from session (only secure way)
+
+      if errors.empty?
+        [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+      else
+        credit_card_and_billing_info_response env, errors
+      end
     end
 
-    def credit_card_and_billing_info_response
-      html = "<form action='/rack-payment-processing' method='post'>"
+    def credit_card_and_billing_info_response env, errors = nil
+      html = ''
+
+      params = Rack::Request.new(env).params
+
+      if errors and not errors.empty?
+        html += '<p>' + errors.join(', ') + '</p>'
+      end
+
+      html += "<form action='/rack-payment-processing' method='post'>"
 
       %w( first_name last_name number cvv expiration_month expiration_year ).each do |field|
-        html += "<input type='text' name='credit_card_#{field}' />"
+        full_field = "credit_card_#{field}"
+        html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
       end
 
       %w( name address1 city state country zip ).each do |field|
-        html += "<input type='text' name='billing_address_#{field}' />"
+        full_field = "billing_address_#{ field }"
+        html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
       end
 
       html += "<input type='submit' value='Purchase' />"
