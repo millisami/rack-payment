@@ -21,8 +21,14 @@ end
 # todo ... move example apps to different files?  maybe?
 class SimpleApp < Sinatra::Base
 
+  class << self
+    attr_accessor :gateway
+  end
+
+  @gateway = ActiveMerchant::Billing::BogusGateway.new
+
   use Rack::Session::Cookie # <-- needs to blow up if this isn't available
-  use Rack::Payment, ActiveMerchant::Billing::BogusGateway.new
+  use Rack::Payment, gateway
 
   helpers do
     include Rack::Payment::Methods
@@ -108,7 +114,8 @@ describe Rack::Payment do
   describe 'high level integration' do
 
     before do
-      set_rack_app SimpleApp.new
+      @app = SimpleApp.new
+      set_rack_app @app
     end
 
     it 'should be able to make a successful purchase (MOST IMPORTANT)' do
@@ -136,6 +143,10 @@ describe Rack::Payment do
       last_response.should_not contain('Order successful')
       last_response.should contain('first_name is required')
 
+      # make sure it gets called with the right amount ... we're not checking the credit card at the moment ...
+      a_gateway = ActiveMerchant::Billing::BogusGateway.new
+      SimpleApp.gateway.should_receive(:authorize).with(995, anything).and_return {|*args| a_gateway.authorize(*args) }
+
       fill_in :credit_card_first_name, :with => 'remi'
       click_button 'Purchase'
 
@@ -156,6 +167,11 @@ describe Rack::Payment do
       #last_response.should contain('Invalid credit card')
       last_response.should contain('failure')
 
+      # make sure capture gets called with the right amount
+      # Use authorization number 1 for exception, 2 for error and anything else for success
+      a_gateway = ActiveMerchant::Billing::BogusGateway.new
+      SimpleApp.gateway.should_receive(:capture).with(995, anything).and_return { a_gateway.capture(995, "success") }
+
       fill_in :credit_card_number, :with => '1' # <--- valid number
       click_button 'Purchase'
 
@@ -163,7 +179,7 @@ describe Rack::Payment do
       last_response.should contain('9.95')
     end
 
-    it 'should get errors if there was a problem processing payment'
+    it 'should get errors if there was a problem capturing payment'
 
   end
 

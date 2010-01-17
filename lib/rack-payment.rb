@@ -117,7 +117,10 @@ module Rack #:nodoc:
         authorize_response = gateway.authorize amount_in_cents, card
 
         if authorize_response.success?
+
+          capture_response = gateway.capture amount_in_cents, authorize_response.authorization
           [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
+
         else
           credit_card_and_billing_info_response env, [authorize_response.message]
         end
