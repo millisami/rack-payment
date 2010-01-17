@@ -22,7 +22,7 @@ describe RActiveMerchant do
 
   # A sample application (which we include the middleware in)
   def rack_app
-    @rack_app ||= lambda {|env| [200, {}, [env.to_yaml]] }
+    @rack_app ||= lambda {|env| [200, {}, ["Hello from app, env:\n" + env.to_yaml]] }
   end
 
   # A bogus gateway
@@ -82,14 +82,14 @@ describe RActiveMerchant do
 
     it 'can access instance of RActiveMerchant via env["rack.ractivemerchant"]' do
       get '/'
-      last_response.body.should include('rack.ractivemerchant: !ruby/object:RActiveMerchant')
+      last_response.body.should include('rack.ractivemerchant.instance: !ruby/object:RActiveMerchant')
     end
 
     it 'can override the env variable name for storing the instance of RAcktiveMerchant' do
-      set_rack_app RActiveMerchant.new(rack_app, gateway, :env_variable => 'hello-there')
+      set_rack_app RActiveMerchant.new(rack_app, gateway, :instance_env_variable => 'hello-there')
 
       get '/'
-      last_response.body.should_not include('rack.ractivemerchant: !ruby/object:RActiveMerchant')
+      last_response.body.should_not include('rack.ractivemerchant.instance: !ruby/object:RActiveMerchant')
       last_response.body.should     include('hello-there: !ruby/object:RActiveMerchant')
     end
 
@@ -106,7 +106,13 @@ describe RActiveMerchant do
 
     it 'should redirect to on_success when credit card is valid and purchase is successful'
 
-    it 'should redirect back (or to on_error) when not all required fields are submitted'
+    it 'should do something smart when no referrer is found (redirect to the purchase form path?)'
+
+    it 'should redirect back (or to on_error) when not all required fields are submitted' do
+      post '/ractivemerchant/purchase', :body => { :credit_card_number => '1' }
+      last_response.body.should include('Hello from app') # should call the rack app
+      last_response.body.should include('credit_card_cvv is required')
+    end
 
     it 'should redirect back (or to on_error) when credit card is not valid'
 

@@ -1,4 +1,5 @@
 require 'active_merchant'
+require 'rack'
 
 # Rack middleware for easily integrating {ActiveMerchant} purchases 
 # into you application.
@@ -19,21 +20,27 @@ require 'active_merchant'
 #
 class RActiveMerchant
 
+  # These fields must be in the POST to purchase_path
+  REQUIRED_PURCHASE_FIELDS = %w( credit_card_number credit_card_cvv )
+
   # Default options that are passed to RActiveMerchant instances when initialized.
   DEFAULT_OPTIONS = {
-    :path_prefix        => '/ractivemerchant',
-    :purchase_path      => '/purchase',
-    :purchase_form_path => '/purchase',
-    :on_success_path    => '/confirmation',
-    :on_error_path      => '/error',
-    :env_variable       => 'rack.ractivemerchant'
+    :path_prefix           => '/ractivemerchant',
+    :purchase_path         => '/purchase',
+    :purchase_form_path    => '/purchase',
+    :on_success_path       => '/confirmation',
+    :on_error_path         => '/error',
+    :instance_env_variable => 'rack.ractivemerchant.instance',
+    :data_env_variable     => 'rack.ractivemerchant.data'
   }
 
   attr_accessor :app
 
   attr_accessor :gateway
 
-  attr_accessor :env_variable
+  attr_accessor :instance_env_variable
+
+  attr_accessor :data_env_variable
 
   attr_accessor :path_prefix
 
@@ -88,10 +95,34 @@ class RActiveMerchant
   # @param [Hash] The Rack Request environment variables
   def call env
     # put this instance of RActiveMerchant in the env so it's accessible from the application
-    env[env_variable] = self
+    env[instance_env_variable] = self
 
-    # Return the response from the Rack application
-    @app.call(env)
+    path   = env['PATH_INFO']
+    method = env['REQUEST_METHOD']
+
+    case path
+    when purchase_path # will need to check for GET or POST ...
+      do_purchase(env)
+    else
+      @app.call(env)
+    end
+  end
+
+  def do_purchase env
+    request = Rack::Request.new(env)
+
+    errors = REQUIRED_PURCHASE_FIELDS.inject([]) do |errors, field|
+      errors << "#{ field } is required" unless request.params[field]
+      errors
+    end
+
+    if errors.empty?
+      [200, {}, ["All is well"]]
+    else
+      env[data_env_variable] ||= {}
+      env[data_env_variable]['errors'] = errors
+      @app.call env
+    end
   end
 
 end
