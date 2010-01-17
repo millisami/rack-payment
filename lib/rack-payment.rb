@@ -119,7 +119,7 @@ module Rack #:nodoc:
         if authorize_response.success?
           [ 200, {}, "Order successful.  You should have been charged #{ amount }" ]
         else
-          credit_card_and_billing_info_response env, [response.message]
+          credit_card_and_billing_info_response env, [authorize_response.message]
         end
 
       else

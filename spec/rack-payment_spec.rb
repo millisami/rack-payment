@@ -144,7 +144,6 @@ describe Rack::Payment do
     end
 
     it 'should get errors if the credit card is not valid (and it lets us fix it)' do
-      pending
       visit '/'
       fill_in :monies, :with => 9.95
       click_button 'Checkout'
@@ -154,7 +153,8 @@ describe Rack::Payment do
       click_button 'Purchase'
 
       last_response.should_not contain('Order successful')
-      last_response.should contain('Invalid credit card')
+      #last_response.should contain('Invalid credit card')
+      last_response.should contain('failure')
 
       fill_in :credit_card_number, :with => '1' # <--- valid number
       click_button 'Purchase'
