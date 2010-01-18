@@ -66,38 +66,47 @@ module Rack     #:nodoc:
       def process_credit_card
         payment.amount ||= amount_in_session
 
-        unless payment.card_or_address_partially_filled_out?
-          params.each do |field, value|
-            if field =~ /^credit_card_(\w+)/
-              payment.credit_card.update $1 => value
-            elsif field =~ /billing_address_(\w+)/
-              payment.billing_address.update $1 => value
-            end 
-          end
+        # the params *should* be set on the payment data object, but we accept 
+        # POST requests too, so we check the POST variables for credit_card 
+        # or billing_address fields
+        params.each do |field, value|
+          if field =~ /^credit_card_(\w+)/
+            payment.credit_card.update $1 => value
+          elsif field =~ /billing_address_(\w+)/
+            payment.billing_address.update $1 => value
+          end 
         end
 
         if payment.credit_card.errors.empty?
           payment.authorize_response = gateway.authorize payment.amount_in_cents, payment.credit_card.active_merchant_card
 
           if payment.authorize_response.success?
+
+            # TODO handle when capture throws an exception
             payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
-
-            if on_success
-              new_env = env.clone
-              new_env['PATH_INFO'] = on_success
-              new_env['REQUEST_METHOD'] = 'GET'
-
-              app.call new_env
-            else
-              [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
-            end
+            render_on_success
 
           else
+            # authorization wasn't successful
             credit_card_and_billing_info_response [payment.authorize_response.message]
           end
 
         else
+          # credit card has errors
           credit_card_and_billing_info_response payment.credit_card.errors
+        end
+      end
+
+      def render_on_success
+        if on_success
+          # on_success is overriden ... we #call the main application using the on_success path
+          new_env = env.clone
+          new_env['PATH_INFO']      = on_success
+          new_env['REQUEST_METHOD'] = 'GET'
+          app.call new_env
+        else
+          # on_success has not been overriden ... let's just display out own info
+          [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
         end
       end
 
