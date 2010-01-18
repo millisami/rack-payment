@@ -33,8 +33,9 @@ describe Rack::Payment, 'integration' do
     last_response.should contain('first_name is required')
 
     # make sure it gets called with the right amount ... we're not checking the credit card at the moment ...
+    # this also makes sure that :ip gets passed!
     a_gateway = ActiveMerchant::Billing::BogusGateway.new
-    SimpleApp.gateway.should_receive(:authorize).with(995, anything).and_return {|*args| a_gateway.authorize(*args) }
+    SimpleApp.gateway.should_receive(:authorize).with(995, anything, :ip => '127.0.0.1').and_return {|*args| a_gateway.authorize(*args) }
 
     fill_in :credit_card_first_name, :with => 'remi'
     click_button 'Purchase'
@@ -212,5 +213,7 @@ describe Rack::Payment, 'integration' do
   end
 
   it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
+
+  it 'should blow up if you do not pass an :id, which is a required parameter now!'
 
 end

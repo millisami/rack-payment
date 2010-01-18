@@ -1,38 +1,122 @@
-<h1>Credit Card and Billing Info</h1>
+<style type='text/css'>
+  div.rack-payment {
+    margin:     2em;
+    text-align: center;
+  }
 
-<% if @errors and not @errors.empty? %>
-  <ul class='errors'>
-    <% for error in @errors %>
-      <li><%= error %></li>
-    <% end %>
-  </ul>
-<% end %>
+  div.rack-payment div.errors {
+    border:        2px solid red;
+    width:         60%;
+    margin:        auto;
+    margin-bottom: 1em;
+  }
 
-<form action='/rack-payment-processing' method='post'>
+  div.rack-payment div.errors p {
+    font-weight: bold;
+    font-size:   1.1em;
+  }
 
-  <!-- required?  try getting rid of it -->
-  <input type='rack.payment' value='true' />
+  div.rack-payment ul.errors {
+    list-style-type: none;
+  }
 
-  <fieldset>
-    <legend>Credit Card</legend>
+  div.rack-payment fieldset {
+    margin:                auto;
+    width:                 70%;
+    padding:               1em;
+    margin-bottom:         1em;
+    -moz-border-radius:    1em;
+    -webkit-border-radius: 1em;
+    -moz-box-shadow:       0.4em 0.4em 0.5em #3d4e5e;
+    -webkit-box-shadow:    0.4em 0.4em 0.5em #3d4e5e;
+  }
 
-    <% %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field| %>
-      <label>
-        <input type='text' name='credit_card_<%= field %>' value='<%= @params["credit_card_#{ field }"] %>' />
-      </label>
-    <% end %>
-  </fieldset>
+  div.rack-payment fieldset legend {
+    font-weight: bold;
+  }
 
-  <fieldset>
-    <legend>Billing Address</legend>
+  div.rack-payment fieldset .group {
+    float: left;
+    margin-right: 2em;
+  }
 
-    <% %w( name address1 city state country zip ).each do |field| %>
-      <label>
-        <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
-      </label>
-    <% end %>
-  </fieldset>
+  div.rack-payment form input {
+    font-size:     1.0em;
+    display:       block;
+    margin-bottom: 0.5em;
+  }
 
-  <input type='submit' value='Purchase' />
+  div.rack-payment form input[type=submit] {
+    margin: auto;
+  }
+</style>
 
-</form>
+<div class='rack-payment'>
+
+  <h1>Credit Card and Billing Info</h1>
+
+  <% if @errors and not @errors.empty? %>
+    <div class='errors'>
+      <p>There were problems processing your request:</p>
+      <ul class='errors'>
+        <% for error in @errors %>
+          <li><%= error %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <form action='/rack-payment-processing' method='post'>
+
+    <!-- required?  try getting rid of it -->
+    <input type='hidden' name='rack.payment' value='true' />
+
+    <fieldset>
+      <legend>Credit Card</legend>
+
+      <div class='group'>
+      <% %w( first_name last_name number type ).each do |field| %>
+        <label>
+          <%= field.gsub('_', ' ').capitalize %>
+          <input type='text' name='credit_card_<%= field %>' value='<%= @params["credit_card_#{ field }"] %>' />
+        </label>
+      <% end %>
+      </div>
+
+      <div class='group'>
+      <% %w( cvv expiration_month expiration_year ).each do |field| %>
+        <label>
+          <%= field.gsub('_', ' ').capitalize %>
+          <input type='text' name='credit_card_<%= field %>' value='<%= @params["credit_card_#{ field }"] %>' />
+        </label>
+      <% end %>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Billing Address</legend>
+
+      <div class='group'>
+      <% %w( name address1 city ).each do |field| %>
+        <label>
+          <%= field.gsub('_', ' ').capitalize %>
+          <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+        </label>
+      <% end %>
+      </div>
+
+      <div class='group'>
+      <% %w( state country zip ).each do |field| %>
+        <label>
+          <%= field.gsub('_', ' ').capitalize %>
+          <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+        </label>
+      <% end %>
+      </div>
+    </fieldset>
+
+    <input type='submit' value='Purchase' />
+
+  </form>
+
+</div>

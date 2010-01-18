@@ -86,7 +86,9 @@ module Rack     #:nodoc:
 
         if payment.credit_card.errors.empty?
           begin
-            payment.authorize_response = gateway.authorize payment.amount_in_cents, payment.credit_card.active_merchant_card
+            payment.authorize_response = gateway.authorize payment.amount_in_cents, 
+                                                           payment.credit_card.active_merchant_card, 
+                                                           :ip => request.ip
           rescue ActiveMerchant::Billing::Error => error
             payment.authorize_response = OpenStruct.new :success? => false, :message => error.message
           end
