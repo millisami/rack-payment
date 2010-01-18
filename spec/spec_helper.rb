@@ -1,6 +1,7 @@
 ENV['RACK_ENV'] ||= 'test'
 
 require File.dirname(__FILE__) + '/../lib/rack/payment'
+require File.dirname(__FILE__) + '/../lib/rack/payment/test'
 %w( rubygems spec rack/test webrat fakeweb sinatra/base ).each {|lib| require lib }
 
 Dir[File.dirname(__FILE__) + '/support/**/*.rb'].each     {|support| require support }
