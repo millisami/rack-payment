@@ -1,119 +1,16 @@
-require 'active_merchant'
-require 'rack'
-require 'bigdecimal'
+$LOAD_PATH.unshift File.dirname(__FILE__)
+
+%w( active_merchant rack bigdecimal ).each {|lib| require lib }
+
+require 'rack-payment/payment'
+require 'rack-payment/credit_card'
+require 'rack-payment/billing_address'
+require 'rack-payment/data'
+require 'rack-payment/methods'
 
 module Rack #:nodoc:
 
   class Payment
-
-    module Methods
-
-      def payment
-        payment_request_env['rack.payment.data'] ||= Rack::Payment::Data.new
-      end
-
-      # [Internal] this method returns the Rack 'env' for the current request.
-      #
-      # This looks for #env or #request.env by default.  If these don't return 
-      # something, then we raise an exception and you should override this method 
-      # so it returns the Rack env that we need.
-      #
-      # TODO lots of middleware might use a method like this ... refactor out?
-      def payment_request_env
-        if respond_to?(:env)
-          env
-        elsif respond_to?(:request) and request.respond_to?(:env)
-          request.env
-        else
-          raise "Couldn't find 'env' ... please override #payment_request_env"
-        end
-      end
-
-    end
-
-    class CreditCard
-      attr_accessor :active_merchant_card
-
-      def initialize
-        @active_merchant_card ||= ActiveMerchant::Billing::CreditCard.new
-      end
-
-      def method_missing name, *args, &block
-        if active_merchant_card.respond_to?(name)
-          active_merchant_card.send(name, *args, &block)
-        else
-          super
-        end
-      end
-
-      def partially_filled_out?
-        %w( type number verification_value month year first_name last_name ).each do |field|
-          return true unless send(field).nil?
-        end
-
-        return false
-      end
-
-      def update options
-        options.each {|key, value| send "#{key}=", value }
-      end
-
-      # Aliases
-
-      def cvv()       verification_value         end
-      def cvv=(value) verification_value=(value) end
-
-      def expiration_year()       year         end
-      def expiration_year=(value) year=(value) end
-
-      def expiration_month()       month         end
-      def expiration_month=(value) month=(value) end
-
-      def type
-        active_merchant_card.type
-      end
-
-    end
-
-    class BillingAddress
-      attr_accessor :name, :address1, :city, :state, :zip, :country
-
-      def update options
-        options.each {|key, value| send "#{key}=", value }
-      end
-
-      def partially_filled_out?
-        %w( name address1 city state zip country ).each do |field|
-          return true unless send(field).nil?
-        end
-
-        return false
-      end
-    end
-
-    class Data
-      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address
-
-      def credit_card
-        @credit_card ||= CreditCard.new
-      end
-
-      def billing_address
-        @billing_address ||= BillingAddress.new
-      end
-
-      def amount= value
-        @amount = BigDecimal(value.to_s)
-      end
-
-      def amount_in_cents
-        (amount * 100).to_i if amount
-      end
-
-      def card_or_address_partially_filled_out?
-        credit_card.partially_filled_out? or billing_address.partially_filled_out?
-      end
-    end
 
     DEFAULT_OPTIONS = { }
 
