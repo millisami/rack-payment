@@ -131,21 +131,13 @@ module Rack     #:nodoc:
       end
 
       def credit_card_and_billing_info_response errors = nil
-        html = ''
-        if errors and not errors.empty?
-          html += '<p>' + errors.join(', ') + '</p>'
-        end
-        html += "<form action='/rack-payment-processing' method='post'><input type='rack.payment' value='true' />"
-        %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field|
-          full_field = "credit_card_#{field}"
-          html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
-        end
-        %w( name address1 city state country zip ).each do |field|
-          full_field = "billing_address_#{ field }"
-          html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
-        end
-        html += "<input type='submit' value='Purchase' />"
-        html += "</form>"
+        view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
+        erb  = ::File.read view
+
+        @errors = errors
+        @params = params
+
+        html = ERB.new(erb).result(binding)
         
         [ 200, {'Content-Type' => 'text/html'}, html ]
       end
