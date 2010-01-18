@@ -1,3 +1,28 @@
+#
+# #authorize
+#   1: Successful Authorization
+#   2: Failed Authorization
+#   3: Raises Exception
+#
+# # capture
+#   1: Failed Capture
+#   2: Raises Exception
+#   *: Successful Capture
+#
+TEST_HELPER = OpenStruct.new({
+  :cc_number => OpenStruct.new({
+    :valid   => '1',
+    :invalid => '2',
+    :boom    => '3'
+  }),
+
+  :auth => OpenStruct.new({
+    :valid   => '123',
+    :invalid => '1',
+    :boom    => '2'
+  })
+})
+
 def fill_in_invalid_credit_card fields = {}
   fill_in_credit_card({:number => '2'}.merge(fields))
 end
