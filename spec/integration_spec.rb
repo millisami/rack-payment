@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe Rack::Payment, 'integration' do
   include IntegrationSpec
 
-  it 'should be able to make a successful purchas' do
+  it 'should be able to make a successful purchase' do
     set_rack_app SimpleApp.new
 
     visit '/'
@@ -174,6 +174,7 @@ describe Rack::Payment, 'integration' do
   end
 
   it 'if i use my own page for filling out credit card / billing info, that page should be re-rendered if errors occur (and can fix errors)' do
+    pending
     set_rack_app SimpleAppWithOwnCreditCardPage.new
 
     visit '/'
@@ -184,20 +185,13 @@ describe Rack::Payment, 'integration' do
     { 
       :first_name       => 'remi',
       :last_name        => 'taylor',
-      :number           => '2',     # 2 is invalid using the BogusGateway
-      :cvv              => '123',
+      :number           => '1',
       :expiration_month => '01',
       :expiration_year  => '2015',
       :type             => 'visa'
     }.each { |key, value| fill_in "credit_card[#{key}]", :with => value.to_s }
-    { 
-      :name     => 'remi',
-      :address1 => '123 Chunky Bacon St.',
-      :city     => 'Magical Land',
-      :state    => 'NY',
-      :country  => 'US',
-      :zip      => '12345'
-    }.each { |key, value| fill_in "address[#{key}]", :with => value.to_s }
+
+    # we forgot the cvv and didn't fill out the address
 
     click_button 'Purchase'
 
