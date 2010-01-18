@@ -13,16 +13,19 @@ class SimpleAppWithOwnCreditCardPage < Sinatra::Base
 
   get '/' do
     html = "<h1>Custom Page</h1>"
+    unless payment.errors.empty?
+      html += "<p>#{ payment.errors.join(', ') }</p>"
+    end
     html += "<form action='/' method='post'>"
-    html += "<input type='text' id='monies' name='monies' />"
+    html += "<input type='text' id='monies' name='monies' value='#{ payment.amount }' />"
     %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field|
       full_field = "credit_card[#{field}]"
-      html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
+      html += "<input type='text' name='#{full_field}' value='#{ payment.credit_card[field] }' />"
     end
 
     %w( name address1 city state country zip ).each do |field|
       full_field = "address[#{ field }]"
-      html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"
+      html += "<input type='text' name='#{full_field}' value='#{ payment.billing_address[field] }' />"
     end
     html += "<input type='submit' value='Purchase' />"
     html += "</form>"

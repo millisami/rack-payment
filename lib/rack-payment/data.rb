@@ -2,7 +2,11 @@ module Rack     #:nodoc:
   class Payment #:nodoc:
 
     class Data
-      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address
+      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address, :errors
+
+      def errors
+        @errors ||= []
+      end
 
       def credit_card
         @credit_card ||= CreditCard.new

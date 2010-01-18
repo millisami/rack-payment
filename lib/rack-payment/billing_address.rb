@@ -4,6 +4,10 @@ module Rack     #:nodoc:
     class BillingAddress
       attr_accessor :name, :address1, :city, :state, :zip, :country
 
+      def [] key
+        send key
+      end
+
       def update options
         options.each {|key, value| send "#{key}=", value }
       end

@@ -17,6 +17,12 @@ module Rack     #:nodoc:
       # Rack::Response that results from calling the Rack application
       attr_accessor :app_response
 
+      attr_accessor :post_came_from_the_built_in_forms
+
+      def post_came_from_the_built_in_forms?
+        post_came_from_the_built_in_forms == true
+      end
+
       def payment_instance
         env['rack.payment']
       end
@@ -57,6 +63,7 @@ module Rack     #:nodoc:
           end
 
         elsif request.path_info == '/rack-payment-processing'
+          self.post_came_from_the_built_in_forms = true
           return process_credit_card # Try to process the request
         end
 
@@ -88,7 +95,16 @@ module Rack     #:nodoc:
 
           else
             # authorization wasn't successful
-            credit_card_and_billing_info_response [payment.authorize_response.message]
+            if post_came_from_the_built_in_forms?
+              credit_card_and_billing_info_response [payment.authorize_response.message]
+            else
+              # pass along the errors to the application's custom page, which should be the current URL
+              # so we can actually just re-call the same env (should display the form) using a GET
+              payment.errors = [payment.authorize_response.message]
+              new_env = env.clone
+              new_env['REQUEST_METHOD'] = 'GET'
+              app.call(new_env)
+            end
           end
 
         else
@@ -115,7 +131,7 @@ module Rack     #:nodoc:
         if errors and not errors.empty?
           html += '<p>' + errors.join(', ') + '</p>'
         end
-        html += "<form action='/rack-payment-processing' method='post'>"
+        html += "<form action='/rack-payment-processing' method='post'><input type='rack.payment' value='true' />"
         %w( first_name last_name number cvv expiration_month expiration_year type ).each do |field|
           full_field = "credit_card_#{field}"
           html += "<input type='text' name='#{full_field}' value='#{ params[full_field] }' />"

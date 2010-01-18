@@ -11,6 +11,10 @@ module Rack     #:nodoc:
         @active_merchant_card ||= ActiveMerchant::Billing::CreditCard.new
       end
 
+      def [] key
+        send key
+      end
+
       def method_missing name, *args, &block
         if active_merchant_card.respond_to?(name)
           active_merchant_card.send(name, *args, &block)
