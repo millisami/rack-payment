@@ -55,13 +55,33 @@ describe Rack::Payment, 'integration' do
     click_button 'Purchase'
 
     last_response.should_not contain('Order successful')
-    #last_response.should contain('Invalid credit card')
     last_response.should contain('failure')
 
     # make sure capture gets called with the right amount
     # Use authorization number 1 for exception, 2 for error and anything else for success
     a_gateway = ActiveMerchant::Billing::BogusGateway.new
     SimpleApp.gateway.should_receive(:capture).with(995, anything).and_return { a_gateway.capture(995, "success") }
+
+    fill_in :credit_card_number, :with => '1' # <--- valid number
+    click_button 'Purchase'
+
+    last_response.should contain('Order successful')
+    last_response.should contain('9.95')
+  end
+
+  it 'should get errors if calling authorize blows up (and it lets us fix it)' do
+    set_rack_app SimpleApp.new
+
+    visit '/'
+    fill_in :monies, :with => 9.95
+    click_button 'Checkout'
+
+    fill_in_valid_credit_card :number => '3' # 3 throws an exception
+    fill_in_valid_billing_address
+    click_button 'Purchase'
+
+    last_response.should_not contain('Order successful')
+    last_response.should contain('Bogus Gateway: Use CreditCard number 1 for success') # <--- part of the exception message
 
     fill_in :credit_card_number, :with => '1' # <--- valid number
     click_button 'Purchase'

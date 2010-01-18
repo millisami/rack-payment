@@ -35,8 +35,6 @@ class SimpleAppWithOwnCreditCardPage < Sinatra::Base
 
   post '/' do
     payment.amount = params[:monies]
-
-    # raise params[:credit_card].inspect
     payment.credit_card.update     params[:credit_card]
     payment.billing_address.update params[:address]
 

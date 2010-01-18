@@ -1,6 +1,6 @@
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
-%w( active_merchant rack bigdecimal forwardable ).each {|lib| require lib }
+%w( active_merchant rack bigdecimal forwardable ostruct ).each {|lib| require lib }
 
 require 'rack-payment/payment'
 require 'rack-payment/request'
