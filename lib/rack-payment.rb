@@ -20,8 +20,9 @@ module Rack #:nodoc:
 
     attr_accessor :on_success
 
-    # @param [#call] Rack application
+    # @param [#call]     Rack application
     # @param [#purchase] {ActiveMerchant::Billing::Gateway}
+    # @param [Hash]      Overrides for any of the {DEFAULT_OPTIONS}
     def initialize rack_application, active_merchant_gateway, options = nil
       raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
       raise ArgumentError, 'You must pass a valid Gateway'          unless active_merchant_gateway.respond_to?(:purchase)
@@ -38,8 +39,6 @@ module Rack #:nodoc:
       env['rack.payment'] = self # make this instance of Rack::Payment available
 
       request = Rack::Request.new(env)
-
-      # puts "#call #{ request.request_method } #{ request.path_info }"
 
       raw_response = @app.call env
       app_response = Rack::Response.new raw_response[2], raw_response[0], raw_response[1]
@@ -88,12 +87,12 @@ module Rack #:nodoc:
       end
 
       # TODO move errors into CreditCard and BillingAddress objects
-      errors   = []
-      required = %w( number first_name last_name )
-      required.each do |field|
-        value = payment.credit_card.send(field)
-        errors << "#{ field } is required" if value.nil? or value.empty?
-      end
+      errors = payment.credit_card.errors
+      #required = %w( number first_name last_name )
+      #required.each do |field|
+      #  value = payment.credit_card.send(field)
+      #  errors << "#{ field } is required" if value.nil? or value.empty?
+      #end
 
       if errors.empty?
 
