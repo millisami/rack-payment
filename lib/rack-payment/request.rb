@@ -84,38 +84,48 @@ module Rack     #:nodoc:
           end 
         end
 
-        if payment.credit_card.errors.empty?
+        # Check for Credit Card errors
+        errors = payment.credit_card.errors
+
+        # Try to #authorize (if no errors so far)
+        if errors.empty?
           begin
             payment.authorize_response = gateway.authorize payment.amount_in_cents, 
                                                            payment.credit_card.active_merchant_card, 
                                                            :ip => request.ip
+            errors << payment.authorize_response.message unless payment.authorize_response.success?
           rescue ActiveMerchant::Billing::Error => error
             payment.authorize_response = OpenStruct.new :success? => false, :message => error.message
+            errors << error.message
           end
+        end
 
-          if payment.authorize_response.success?
+        # Try to #capture (if no errors so far)
+        if errors.empty?
+          # TODO handle capture unsuccessful
+          # TODO handle capture exception
+          payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
+        end
 
-            # TODO handle when capture throws an exception
-            payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
-            render_on_success
-
-          else
-            # authorization wasn't successful
-            if post_came_from_the_built_in_forms?
-              credit_card_and_billing_info_response [payment.authorize_response.message]
-            else
-              # pass along the errors to the application's custom page, which should be the current URL
-              # so we can actually just re-call the same env (should display the form) using a GET
-              payment.errors = [payment.authorize_response.message]
-              new_env = env.clone
-              new_env['REQUEST_METHOD'] = 'GET'
-              app.call(new_env)
-            end
-          end
-
+        # RENDER
+        if errors.empty?
+          render_on_success
         else
-          # credit card has errors
-          credit_card_and_billing_info_response payment.credit_card.errors
+          render_on_error errors
+        end
+      end
+
+      def render_on_error errors
+        if post_came_from_the_built_in_forms?
+          # we POSTed from our form, so let's re-render our form
+          credit_card_and_billing_info_response errors
+        else
+          # pass along the errors to the application's custom page, which should be the current URL
+          # so we can actually just re-call the same env (should display the form) using a GET
+          payment.errors = errors
+          new_env = env.clone
+          new_env['REQUEST_METHOD'] = 'GET'
+          app.call(new_env)
         end
       end
 
