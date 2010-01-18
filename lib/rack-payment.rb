@@ -142,7 +142,7 @@ module Rack #:nodoc:
 
       request = Rack::Request.new(env)
 
-      puts "#call #{ request.request_method } #{ request.path_info }"
+      # puts "#call #{ request.request_method } #{ request.path_info }"
 
       raw_response = @app.call env
       app_response = Rack::Response.new raw_response[2], raw_response[0], raw_response[1]
