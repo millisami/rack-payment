@@ -102,9 +102,13 @@ module Rack     #:nodoc:
 
         # Try to #capture (if no errors so far)
         if errors.empty?
-          # TODO handle capture unsuccessful
-          # TODO handle capture exception
-          payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
+          begin
+            payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
+            errors << payment.capture_response.message unless payment.capture_response.success?
+          rescue ActiveMerchant::Billing::Error => error
+            payment.capture_response = OpenStruct.new :success? => false, :message => error.message
+            errors << payment.capture_response.message
+          end
         end
 
         # RENDER
