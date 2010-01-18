@@ -69,6 +69,29 @@ describe Rack::Payment, 'integration' do
     last_response.should contain('9.95')
   end
 
+  it 'should handle when #capture is not successful' do
+    pending 'waiting to refactor the error handling a bit'
+
+    set_rack_app SimpleApp.new
+
+    visit '/'
+    fill_in :monies, :with => 9.95
+    click_button 'Checkout'
+
+    # if capture gets called with an authorization of '1', it fails
+    authorize_response = OpenStruct.new :success? => true, :authorization => '2'
+    SimpleApp.gateway.should_receive(:authorize).with(995, anything).and_return(authorize_response)
+
+    fill_in_valid_credit_card
+    fill_in_valid_billing_address
+    click_button 'Purchase'
+
+    last_response.should_not contain('Order successful')
+    last_response.should contain('Bogus Gateway: Use authorization number 1 for exception') # <--- response message
+  end
+
+  it 'should handle when #capture is not blows up'
+
   it 'should get errors if calling authorize blows up (and it lets us fix it)' do
     set_rack_app SimpleApp.new
 
