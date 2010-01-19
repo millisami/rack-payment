@@ -5,7 +5,10 @@ module Rack     #:nodoc:
     class Request
       extend Forwardable
 
-      def_delegators :payment_instance, :app, :gateway, :express_gateway, :on_success
+      def_delegators :payment_instance, :app, :gateway, :express_gateway, :on_success, :built_in_form_path, 
+                                        :env_instance_variable, :env_data_variable, :session_variable,
+                                        :rack_session_variable, :express_ok_path, :express_cancel_path,
+                                        :built_in_form_path
       def_delegators :request, :params
 
       # raw ENV hash
@@ -19,30 +22,32 @@ module Rack     #:nodoc:
 
       attr_accessor :post_came_from_the_built_in_forms
 
+      attr_accessor :payment_instance
+
       def post_came_from_the_built_in_forms?
         post_came_from_the_built_in_forms == true
       end
 
-      def payment_instance
-        env['rack.payment']
+      def payment
+        env[env_data_variable] ||= Rack::Payment::Data.new
       end
 
-      def payment
-        env['rack.payment.data'] ||= Rack::Payment::Data.new
+      def session
+        env[rack_session_variable][session_variable] ||= {}
       end
 
       def amount_in_session
-        env['rack.session']['rack.payment'] ||= {}
-        env['rack.session']['rack.payment']['amount']
+        session[:amount]
       end
 
       def amount_in_session= value
-        env['rack.session']['rack.payment'] ||= {}
-        env['rack.session']['rack.payment']['amount'] = value
+        session[:amount] = value
       end
 
       # ...
-      def initialize env
+      def initialize env, payment_instance
+        @payment_instance = payment_instance
+
         self.env          = env
         self.request      = Rack::Request.new @env
 
@@ -64,11 +69,11 @@ module Rack     #:nodoc:
             return credit_card_and_billing_info_response # Payment Required!
           end
 
-        elsif request.path_info == '/rack-payment-processing'
+        elsif request.path_info == built_in_form_path
           self.post_came_from_the_built_in_forms = true
           return process_credit_card # Try to process the request
 
-        elsif request.path_info == '/express-payment-ok'
+        elsif request.path_info == express_ok_path
           return process_express_payment_callback
         end
 
@@ -132,8 +137,8 @@ module Rack     #:nodoc:
 
         # TODO go BOOM if the express gateway isn't set!
         response = express_gateway.setup_purchase payment.amount_in_cents, :ip                => request.ip, 
-                                                                           :return_url        => '/express-payment-ok',
-                                                                           :cancel_return_url => '/express-payment-cancel'
+                                                                           :return_url        => express_ok_path,
+                                                                           :cancel_return_url => express_cancel_path
 
         [ 302, {'Location' => express_gateway.redirect_url_for(response.token)}, ['Redirecting to PayPal Express Checkout'] ]
       end
@@ -169,8 +174,9 @@ module Rack     #:nodoc:
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
 
-        @errors = errors
-        @params = params
+        @this    = self
+        @errors  = errors
+        @params  = params
 
         html = ERB.new(erb).result(binding)
         

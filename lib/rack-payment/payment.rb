@@ -3,21 +3,33 @@ module Rack #:nodoc:
   # Here be Payment doco ...
   class Payment
 
-    DEFAULT_OPTIONS = { }
-
-    MIDDLEWARE_OPTION_KEYS = [ :on_success ]
+    DEFAULT_OPTIONS = {
+      :on_success            => nil,
+      :built_in_form_path    => '/rack.payment/process',
+      :express_ok_path       => '/rack.payment/express.callback/ok',
+      :express_cancel_path   => '/rack.payment/express.callback/cancel',
+      :env_instance_variable => 'rack.payment',
+      :env_data_variable     => 'rack.payment.data',
+      :session_variable      => 'rack.payment',
+      :rack_session_variable => 'rack.session'
+    }
 
     attr_accessor :app
 
+    # PATHS
     attr_accessor :on_success
+    attr_accessor :built_in_form_path
+    attr_accessor :express_ok_path
+    attr_accessor :express_cancel_path
+    attr_accessor :env_instance_variable
+    attr_accessor :env_data_variable
+    attr_accessor :session_variable
+    attr_accessor :rack_session_variable
 
     attr_accessor :gateway_type
-
     attr_accessor :gateway_options
-
-    attr_writer :gateway
-
-    attr_writer :paypal_express_gateway
+    attr_writer   :gateway
+    attr_writer   :paypal_express_gateway
 
     # Uses the #gateway_options to instantiate a [paypal] express gateway
     #
@@ -66,18 +78,18 @@ module Rack #:nodoc:
       raise ArgumentError, 'You must pass a valid Gateway'          unless gateway.is_a?(ActiveMerchant::Billing::Gateway)
 
       DEFAULT_OPTIONS.each {|name, value| send "#{name}=", value }
-      MIDDLEWARE_OPTION_KEYS.each {|key| send "#{key}=", @gateway_options[key] if @gateway_options[key] } if @gateway_options
+      DEFAULT_OPTIONS.keys.each {|key| send "#{key}=", @gateway_options[key] if @gateway_options[key] } if @gateway_options
     end
 
     # @param [Hash] The Rack Request environment variables
     def call env
 
       # make this instance of Rack::Payment available
-      env['rack.payment'] ||= self
+      env[env_instance_variable] ||= self
 
       # create a new Request, which wraps an individual request 
       # and get a Rack response from it
-      return Request.new(env).finish
+      return Request.new(env, self).finish
     end
 
   end
