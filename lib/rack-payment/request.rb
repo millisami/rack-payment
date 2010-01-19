@@ -5,7 +5,7 @@ module Rack     #:nodoc:
     class Request
       extend Forwardable
 
-      def_delegators :payment_instance, :app, :gateway, :on_success
+      def_delegators :payment_instance, :app, :gateway, :express_gateway, :on_success
       def_delegators :request, :params
 
       # raw ENV hash
@@ -56,6 +56,8 @@ module Rack     #:nodoc:
 
           self.amount_in_session = payment.amount # we need to put this in the session ... i forget why ...
 
+          return process_credit_card if payment.use_express?
+
           if payment.card_or_address_partially_filled_out?
             return process_credit_card # You've filled stuff out!  Try to process ...
           else
@@ -65,6 +67,9 @@ module Rack     #:nodoc:
         elsif request.path_info == '/rack-payment-processing'
           self.post_came_from_the_built_in_forms = true
           return process_credit_card # Try to process the request
+
+        elsif request.path_info == '/express-payment-ok'
+          return process_express_payment_callback
         end
 
         app_response.finish # default to returning the application's response
@@ -83,6 +88,8 @@ module Rack     #:nodoc:
             payment.billing_address.update $1 => value
           end 
         end
+
+        return setup_express_purchase if payment.use_express?
 
         # Check for Credit Card errors
         errors = payment.credit_card.errors
@@ -117,6 +124,18 @@ module Rack     #:nodoc:
         else
           render_on_error errors
         end
+      end
+
+      def setup_express_purchase
+        # TODO we should get the callback URLs to use from the Rack::Purchase
+        #      and they should be overridable
+
+        # TODO go BOOM if the express gateway isn't set!
+        response = express_gateway.setup_purchase payment.amount_in_cents, :ip                => request.ip, 
+                                                                           :return_url        => '/express-payment-ok',
+                                                                           :cancel_return_url => '/express-payment-cancel'
+
+        [ 302, {'Location' => express_gateway.redirect_url_for(response.token)}, ['Redirecting to PayPal Express Checkout'] ]
       end
 
       def render_on_error errors
@@ -156,6 +175,19 @@ module Rack     #:nodoc:
         html = ERB.new(erb).result(binding)
         
         [ 200, {'Content-Type' => 'text/html'}, html ]
+      end
+
+      def process_express_payment_callback
+        payment.amount ||= amount_in_session # gets lost because we're coming here directly from PayPal
+
+        details = express_gateway.details_for params['token']
+
+        express_gateway.purchase payment.amount_in_cents, :ip       => request.ip,
+                                                          :token    => params['token'],
+                                                          :payer_id => details.payer_id
+
+        # should be complete ...
+        [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
       end
 
     end

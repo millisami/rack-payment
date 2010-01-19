@@ -30,13 +30,9 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
   end
 
   post '/' do
-    payment.amount = params[:monies]
-
-    if params[:button] == 'Checkout with PayPal'
-      raise 'Need to do PayPal Express!'
-    else
-      [ 402, {}, ['Payment Required'] ]
-    end
+    payment.amount      = params[:monies]
+    payment.use_express = params[:button] == 'Checkout with PayPal'
+    [ 402, {}, ['Payment Required'] ]
   end
 
 end

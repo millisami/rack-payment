@@ -2,7 +2,19 @@ module Rack     #:nodoc:
   class Payment #:nodoc:
 
     class Data
-      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address, :errors
+      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address, :errors, :use_express
+
+      def use_express
+        @use_express.nil? ? false : @use_express # default to false
+      end
+
+      def use_express?
+        self.use_express == true
+      end
+
+      def use_express!
+        self.use_express = true 
+      end
 
       def errors
         @errors ||= []

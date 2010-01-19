@@ -35,11 +35,11 @@ describe Rack::Payment, 'PayPal Express' do
     # should be redirected to the appropriate PayPal URL to actually fill stuff out.
     # if we cancel, it will redirect us back to X url.
     # if we don't,  it will redirect us back to Y url.
-    last_response.location.should == '... some paypal url ... ?'
+    last_response.location.should == 'http://www.some-express-gateway-url/' # from BogusExpressGateway
 
-    visit '/the-url-paypal-will-redirect-back-with?token=12345' # need to make sure that the gateway
-                                                                # knows this token and will give us 
-                                                                # back the details we expect
+    visit '/express-payment-ok?token=12345' # need to make sure that the gateway
+                                            # knows this token and will give us 
+                                            # back the details we expect
 
     last_response.should contain('Order successful')
     last_response.should contain('9.95')
