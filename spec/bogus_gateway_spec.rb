@@ -7,5 +7,16 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe ActiveMerchant::Billing::BogusGateway do
 
+  describe '#authorize' do
+    
+    it 'should be successful if the credit card number is 1'
+    it 'should not be if the credit card number is 2'
+    it 'should raise exception if the credit card number is 3'
+
+  end
+
+  describe '#capture' do
+
+  end
 
 end

@@ -5,24 +5,68 @@ module Rack #:nodoc:
 
     DEFAULT_OPTIONS = { }
 
+    MIDDLEWARE_OPTION_KEYS = [ :on_success ]
+
     attr_accessor :app
 
-    attr_accessor :gateway
-
     attr_accessor :on_success
+
+    attr_accessor :gateway_type
+
+    attr_accessor :gateway_options
+
+    attr_writer :gateway
+
+    attr_writer :paypal_express_gateway
+
+    # Uses the #gateway_options to instantiate a [paypal] express gateway
+    #
+    # If your main gateway is a PaypayGateway, we'll make a PaypalExpressGateway
+    # If your main gateway is a BogusGateway, we'll make a BogusExpressGateway
+    #
+    # For any gateway, we'll try to make a *ExpressGateway
+    #
+    # This ONLY works for classes underneath ActiveMerchant::Billing
+    def express_gateway
+      @paypal_express_gateway ||= ActiveMerchant::Billing::Base.gateway(express_gateway_type).new(gateway_options)
+    end
+
+    # Uses the class of #gateway to determine 
+    def express_gateway_type
+      gateway.class.to_s.split('::').last.sub(/(\w+)Gateway$/, '\1_express')
+    end
+
+    # uses the #gateway_type and #gateway_options to instantiate a gateway
+    def gateway
+      unless @gateway
+        begin
+          @gateway = ActiveMerchant::Billing::Base.gateway(gateway_type.to_s).new(gateway_options)
+        rescue NameError
+          # do nothing, @gateway should be nil because the gateway_type was invalid
+        end
+      end
+      @gateway
+    end
 
     # @param [#call]     Rack application
     # @param [#purchase] {ActiveMerchant::Billing::Gateway}
     # @param [Hash]      Overrides for any of the {DEFAULT_OPTIONS}
-    def initialize rack_application, active_merchant_gateway, options = nil
-      raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
-      raise ArgumentError, 'You must pass a valid Gateway'          unless active_merchant_gateway.respond_to?(:purchase)
+    def initialize rack_application, gateway_type, gateway_options = nil
+      @app             = rack_application
 
-      @app     = rack_application
-      @gateway = active_merchant_gateway
+      if gateway_options.nil? and gateway_type.is_a?(Hash)
+        @gateway_options = gateway_type
+        @gateway_type    = @gateway_options['gateway'] || @gateway_options[:gateway]
+      else
+        @gateway_options = gateway_options
+        @gateway_type    = gateway_type
+      end
+
+      raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
+      raise ArgumentError, 'You must pass a valid Gateway'          unless gateway.is_a?(ActiveMerchant::Billing::Gateway)
 
       DEFAULT_OPTIONS.each {|name, value| send "#{name}=", value }
-      options.each         {|name, value| send "#{name}=", value } if options
+      MIDDLEWARE_OPTION_KEYS.each {|key| send "#{key}=", @gateway_options[key] if @gateway_options[key] } if @gateway_options
     end
 
     # @param [Hash] The Rack Request environment variables

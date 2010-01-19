@@ -22,6 +22,13 @@ describe Rack::Payment, 'PayPal Express' do
 
   it 'can make a purchase via PayPal Express' do
     visit '/'
+
+    # should have access to the Rack::Purchase instance ...
+    klass = SimpleAppWithPayPalExpress
+    klass.rack_payment_instance.should                        be_a(Rack::Payment)
+    klass.rack_payment_instance.gateway.should                be_a(ActiveMerchant::Billing::BogusGateway)
+    klass.rack_payment_instance.express_gateway.should be_a(ActiveMerchant::Billing::BogusExpressGateway)
+
     fill_in :monies, :with => 9.95
     click_button 'Checkout with PayPal'
 

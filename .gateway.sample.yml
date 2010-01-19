@@ -1,0 +1,14 @@
+test: 
+  gateway: bogus
+
+development: 
+    gateway:   paypal
+    login:     bob_biz_api1.domain.com
+    password:  asc123
+    signature: Qwerty1234567890
+
+production: 
+    gateway:   paypal
+    login:     real_person.domain.com
+    password:  real_password
+    signature: real_signature

@@ -5,20 +5,14 @@ require File.dirname(__FILE__) + '/../lib/rack/payment' unless defined?(Rack::Pa
 
 ActiveMerchant::Billing::Base.mode = :test
 
-# .gateway.rb should be set in your root path and it should 
-# specify an ActiveMerchant::Billing::Gateway with the 
-# constant GATEWAY
-require File.dirname(__FILE__) + '/../.gateway' unless ENV['RACK_ENV'] == 'test'
-
 # Overrides on_success with its own page
 class SimpleAppWithOnSuccessOverridden < Sinatra::Base
 
   # For our specs, we need access to this gateway instance
   class << self; attr_accessor :gateway; end
-  @gateway = ENV['RACK_ENV'] == 'test' ? ActiveMerchant::Billing::BogusGateway.new : Kernel.const_get(:GATEWAY)
 
   use Rack::Session::Cookie
-  use Rack::Payment, gateway, :on_success => '/custom_success_page'
+  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ].merge(:on_success => '/custom_success_page')
 
   use_in_file_templates!
 
@@ -27,6 +21,7 @@ class SimpleAppWithOnSuccessOverridden < Sinatra::Base
   end
 
   get '/' do
+    self.class.gateway = env['rack.payment'].gateway
     haml :index
   end
 

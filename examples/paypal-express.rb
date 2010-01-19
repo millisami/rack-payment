@@ -5,19 +5,17 @@ require File.dirname(__FILE__) + '/../lib/rack/payment' unless defined?(Rack::Pa
 
 ActiveMerchant::Billing::Base.mode = :test
 
-# .gateway.rb should be set in your root path and it should 
-# specify an ActiveMerchant::Billing::Gateway with the 
-# constant GATEWAY
-require File.dirname(__FILE__) + '/../.gateway' unless ENV['RACK_ENV'] == 'test'
-
 class SimpleAppWithPayPalExpress < Sinatra::Base
 
   # For our specs, we need access to this gateway instance
   class << self; attr_accessor :gateway; end
-  @gateway = ENV['RACK_ENV'] == 'test' ? ActiveMerchant::Billing::BogusGateway.new : Kernel.const_get(:GATEWAY)
+
+  class << self
+    attr_accessor :rack_payment_instance # expose the rack_purchase object so our specs can get it
+  end
 
   use Rack::Session::Cookie
-  use Rack::Payment, gateway
+  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ]
 
   use_in_file_templates!
 
@@ -26,6 +24,8 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
   end
 
   get '/' do
+    self.class.rack_payment_instance = env['rack.payment'] # <--- should be availabe via helper
+    self.class.gateway               = env['rack.payment'].gateway
     haml :index
   end
 
