@@ -1,7 +1,7 @@
 module Rack     #:nodoc:
   class Payment #:nodoc:
 
-    # When you call {Rack::Purchase#call}, a new {Rack::Payment::Request} instance 
+    # When you call {Rack::Payment#call}, a new {Rack::Payment::Request} instance 
     # gets created and it does the actual logic to figure out what to do.
     #
     # The {#finish} method "executes" this class (it figures out what to do).
@@ -87,7 +87,9 @@ module Rack     #:nodoc:
         # The application returned a 402 ('Payment Required')
         if app_response.status == 402
           self.amount_in_session = payment.amount
-          return process_credit_card if payment.use_express?
+          
+          return setup_express_purchase if payment.use_express?
+          
           if payment.card_or_address_partially_filled_out?
             return process_credit_card
           else
@@ -110,6 +112,8 @@ module Rack     #:nodoc:
         app_response.finish
       end
 
+      # Gets parameters, attempts an #authorize call, attempts a #capture call, 
+      # and renders the results.
       def process_credit_card
         payment.amount ||= amount_in_session
 
@@ -123,8 +127,6 @@ module Rack     #:nodoc:
             payment.billing_address.update $1 => value
           end 
         end
-
-        return setup_express_purchase if payment.use_express?
 
         # Check for Credit Card errors
         errors = payment.credit_card.errors
