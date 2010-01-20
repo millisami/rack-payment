@@ -21,6 +21,11 @@ describe Rack::Payment, 'configuration' do
 
   before do
     @app = lambda { }
+    @yml_file_names = Rack::Payment.yml_file_names
+  end
+
+  after do
+    Rack::Payment.yml_file_names = @yml_file_names
   end
 
   it 'requires a valid Rack application (that responds to #call)' do
@@ -77,16 +82,16 @@ describe Rack::Payment, 'configuration' do
     Rack::Payment.new(@app, :gateway => 'bogus', :on_success => '/foo').gateway_options['on_success'].should be_nil
   end
 
-  it 'supports yml configuration files with environments (if RACK_ENV is set and it matches one of the keys)' do
+  it 'supports yml configuration files with environments (if ENV["RACK_ENV"] is set and it matches one of the keys)' do
     tmpfile = Tempfile.new 'yaml-file1'
     tmpfile.print({ 'test' => { :gateway => :bogus, :foo => 'bar' }}.to_yaml)
     tmpfile.close
     Rack::Payment.yml_file_names = [tmpfile.path]
 
-    RACK_ENV = nil
+    ENV["RACK_ENV"] = nil
     lambda { Rack::Payment.new(@app) }.should raise_error(/valid gateway/i)
 
-    RACK_ENV = 'test'
+    ENV["RACK_ENV"] = 'test'
     Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
     Rack::Payment.new(@app).gateway_options['foo'].should == 'bar'
   end

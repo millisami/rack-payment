@@ -205,7 +205,7 @@ module Rack #:nodoc:
           if options and options.is_a?(Hash)
 
             # handle RACK_ENV so you can put your test/development/etc in the same file
-            options = options[RACK_ENV] if defined?(RACK_ENV) and options[RACK_ENV].is_a?(Hash)
+            options = options[ENV['RACK_ENV']] if ENV['RACK_ENV'] and options[ENV['RACK_ENV']].is_a?(Hash)
 
             return options.stringify_keys
           end
