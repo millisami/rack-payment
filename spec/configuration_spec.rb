@@ -36,6 +36,8 @@ describe Rack::Payment, 'configuration' do
   end
 
   it 'requires a valid Gateway' do
+    Rack::Payment.yml_file_names = []
+
     lambda { Rack::Payment.new @app, :gateway => nil }.should raise_error(ArgumentError, /valid gateway/i)
     lambda { Rack::Payment.new @app, :gateway => 'foo' }.should raise_error(ArgumentError, /valid gateway/i)
     lambda { Rack::Payment.new @app, :gateway => :bogus }.should_not raise_error
@@ -54,7 +56,7 @@ describe Rack::Payment, 'configuration' do
     lambda { Rack::Payment.new(@app) }.should raise_error(ArgumentError, /must pass options/i)
 
     tmpfile = Tempfile.new 'yaml-file1'
-    tmpfile.print({ :gateway => :bogus, :foo => 'bar' }.to_yaml)
+    tmpfile.print({ :gateway => :bogus, 'foo' => 'bar' }.to_yaml)
     tmpfile.close
     Rack::Payment.yml_file_names = [tmpfile.path]
     Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
@@ -73,12 +75,12 @@ describe Rack::Payment, 'configuration' do
     # passing a :gateway should OVERRIDE the one from yml
     lambda { Rack::Payment.new(@app, :gateway => 'no-exist') }.should raise_error(/valid gateway/i)
 
-    Rack::Payment.new(@app, :gateway => :bogus).gateway_options['foo'].should == 'bar'
-    Rack::Payment.new(@app, :gateway => :bogus, :yml_config => false).gateway_options['foo'].should be_nil
+    Rack::Payment.new(@app, :gateway => :bogus).gateway_options[:foo].should == 'bar'
+    Rack::Payment.new(@app, :gateway => :bogus, :yml_config => false).gateway_options[:foo].should be_nil
   end
 
   it 'should remove the Rack::Payment options from options passed so they do not make it into gateway_options' do
-    Rack::Payment.new(@app, :gateway => 'bogus', :foo => 'bar').gateway_options['foo'].should == 'bar'
+    Rack::Payment.new(@app, :gateway => 'bogus', :foo => 'bar').gateway_options[:foo].should == 'bar'
     Rack::Payment.new(@app, :gateway => 'bogus', :on_success => '/foo').gateway_options['on_success'].should be_nil
   end
 
@@ -93,7 +95,7 @@ describe Rack::Payment, 'configuration' do
 
     ENV["RACK_ENV"] = 'test'
     Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
-    Rack::Payment.new(@app).gateway_options['foo'].should == 'bar'
+    Rack::Payment.new(@app).gateway_options[:foo].should == 'bar'
   end
 
   it 'can take a hash where the gateway type is passed as :gateway (for easy YML loading)' do

@@ -165,24 +165,26 @@ module Rack #:nodoc:
     #   @param [Hash] Options for the gateway and for Rack::Payment
     #
     def initialize rack_application, options = nil
-      options = options ? options.stringify_keys : {}
-      options = look_for_options_in_a_yml_file.merge(options) unless options['yml_config'] == false
+      options ||= {}
+      options = look_for_options_in_a_yml_file.merge(options) unless options['yml_config'] == false or options[:yml_config] == false
       raise ArgumentError, "You must pass options (or put them in a yml file)." if options.empty?
 
       @app             = rack_application
       @gateway_options = options             # <---- need to remove *our* options from the gateway options!
-      @gateway_type    = options['gateway']
+      @gateway_type    = options['gateway'] || options[:gateway]
 
       raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
-      raise ArgumentError, 'You must pass a valid Gateway'          unless gateway.is_a?(ActiveMerchant::Billing::Gateway)
+      raise ArgumentError, 'You must pass a valid Gateway'          unless @gateway_type and gateway.is_a?(ActiveMerchant::Billing::Gateway)
 
       DEFAULT_OPTIONS.each do |name, value|
         # set the default
         send "#{name}=", value
 
         # override the value from options, if passed
-        if @gateway_options[name] 
-          send "#{name}=", @gateway_options.delete(name)
+        if @gateway_options[name.to_s] 
+          send "#{name.to_s}=", @gateway_options.delete(name.to_s)
+        elsif @gateway_options[name.to_s.to_sym] 
+          send "#{name.to_s.to_sym}=", @gateway_options.delete(name.to_s.to_sym)
         end
       end
     end
@@ -208,7 +210,7 @@ module Rack #:nodoc:
             # handle RACK_ENV so you can put your test/development/etc in the same file
             options = options[ENV['RACK_ENV']] if ENV['RACK_ENV'] and options[ENV['RACK_ENV']].is_a?(Hash)
 
-            return options.stringify_keys
+            return options
           end
         end
       end
