@@ -12,7 +12,7 @@ class SimpleAppWithOnSuccessOverridden < Sinatra::Base
   class << self; attr_accessor :gateway; end
 
   use Rack::Session::Cookie
-  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ].merge(:on_success => '/custom_success_page')
+  use Rack::Payment, :on_success => '/custom_success_page'
 
   use_in_file_templates!
 

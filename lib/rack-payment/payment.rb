@@ -12,6 +12,21 @@ module Rack #:nodoc:
   #
   class Payment
 
+    # Default file names that we used to look for yml configuration.
+    # You can change {Rack::Payment::yml_file_names} to override.
+    YML_FILE_NAMES = %w( .rack-payment.yml rack-payment.yml config/rack-payment.yml payment.yml config/payment.yml )
+
+    class << self
+
+      # A string of file names that we use to look for options, 
+      # if options are not passes to the Rack::Payment constructor.
+      #
+      # @return [Array(String)]
+      attr_accessor :yml_file_names
+    end
+
+    @yml_file_names = YML_FILE_NAMES
+
     # These are the default values that we use to set the Rack::Payment attributes.
     #
     # These can all be overriden by passing the attribute name and new value to 
@@ -20,14 +35,14 @@ module Rack #:nodoc:
     #   use Rack::Payment, :on_success => '/my-custom-page'
     #
     DEFAULT_OPTIONS = {
-      :on_success            => nil,
-      :built_in_form_path    => '/rack.payment/process',
-      :express_ok_path       => '/rack.payment/express.callback/ok',
-      :express_cancel_path   => '/rack.payment/express.callback/cancel',
-      :env_instance_variable => 'rack.payment',
-      :env_data_variable     => 'rack.payment.data',
-      :session_variable      => 'rack.payment',
-      :rack_session_variable => 'rack.session'
+      'on_success'            => nil,
+      'built_in_form_path'    => '/rack.payment/process',
+      'express_ok_path'       => '/rack.payment/express.callback/ok',
+      'express_cancel_path'   => '/rack.payment/express.callback/cancel',
+      'env_instance_variable' => 'rack.payment',
+      'env_data_variable'     => 'rack.payment.data',
+      'session_variable'      => 'rack.payment',
+      'rack_session_variable' => 'rack.session'
     }
 
     # The {Rack} application that this middleware was instantiated with
@@ -140,35 +155,35 @@ module Rack #:nodoc:
     end
 
     # @overload initialize(rack_application)
-    #   Not yet implemented.  This will search for a YML file or ENV variable to set gateway_options.
+    #   Not yet implemented.  This will search for a YML file or ENV variable to set options.
     #   @param [#call] The Rack application for this middleware
     #
-    # @overload initialize(rack_application, gateway_options)
+    # @overload initialize(rack_application, options)
     #   Accepts a Hash of options where the :gateway option is used as the {#gateway_type}
     #   @param [#call] The Rack application for this middleware
-    #   @param [Hash] Options for the gateway.  These are passed straight to the gateway initializer.
+    #   @param [Hash] Options for the gateway and for Rack::Payment
     #
-    # @overload initialize(rack_application, gateway_type, gateway_options)
-    #   Accepts a Rack application, a type of gateway to use, and a hash of options for the gateway.
-    #   @param [#call] The Rack application for this middleware
-    #   @param [String] The type of gateway to use, eg. 'paypal'
-    #   @param [Hash] Options for the gateway.  These are passed straight to the gateway initializer.
-    def initialize rack_application, gateway_type, gateway_options = nil
-      @app             = rack_application
+    def initialize rack_application, options = nil
+      options = options ? options.stringify_keys : {}
+      options = look_for_options_in_a_yml_file.merge(options) unless options['yml_config'] == false
+      raise ArgumentError, "You must pass options (or put them in a yml file)." if options.empty?
 
-      if gateway_options.nil? and gateway_type.is_a?(Hash)
-        @gateway_options = gateway_type
-        @gateway_type    = @gateway_options['gateway'] || @gateway_options[:gateway]
-      else
-        @gateway_options = gateway_options
-        @gateway_type    = gateway_type
-      end
+      @app             = rack_application
+      @gateway_options = options             # <---- need to remove *our* options from the gateway options!
+      @gateway_type    = options['gateway']
 
       raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
       raise ArgumentError, 'You must pass a valid Gateway'          unless gateway.is_a?(ActiveMerchant::Billing::Gateway)
 
-      DEFAULT_OPTIONS.each {|name, value| send "#{name}=", value }
-      DEFAULT_OPTIONS.keys.each {|key| send "#{key}=", @gateway_options[key] if @gateway_options[key] } if @gateway_options
+      DEFAULT_OPTIONS.each do |name, value|
+        # set the default
+        send "#{name}=", value
+
+        # override the value from options, if passed
+        if @gateway_options[name] 
+          send "#{name}=", @gateway_options.delete(name)
+        end
+      end
     end
 
     # The main Rack #call method required by every Rack application / middleware.
@@ -176,6 +191,28 @@ module Rack #:nodoc:
     def call env
       env[env_instance_variable] ||= self   # make this instance available
       return Request.new(env, self).finish  # a Request object actually returns the response
+    end
+
+    # Looks for options in a yml file with a conventional name (using Rack::Payment.yml_file_names)
+    # Returns an empty Hash, if no options are found from a yml file.
+    # @return [Hash]
+    def look_for_options_in_a_yml_file
+      Rack::Payment.yml_file_names.each do |filename|
+        if ::File.file?(filename)
+          options = YAML.load_file(filename)
+
+          # if the YAML loaded something and it's a Hash
+          if options and options.is_a?(Hash)
+
+            # handle RACK_ENV so you can put your test/development/etc in the same file
+            options = options[RACK_ENV] if defined?(RACK_ENV) and options[RACK_ENV].is_a?(Hash)
+
+            return options.stringify_keys
+          end
+        end
+      end
+
+      return {}
     end
 
   end

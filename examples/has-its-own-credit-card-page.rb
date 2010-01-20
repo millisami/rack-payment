@@ -12,7 +12,7 @@ class SimpleAppWithOwnCreditCardPage < Sinatra::Base
   class << self; attr_accessor :gateway; end
 
   use Rack::Session::Cookie
-  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ].merge(:on_success => '/success')
+  use Rack::Payment, :on_success => '/success'
 
   use_in_file_templates!
 

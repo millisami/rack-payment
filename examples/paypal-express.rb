@@ -15,7 +15,7 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
   end
 
   use Rack::Session::Cookie
-  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ]
+  use Rack::Payment
 
   use_in_file_templates!
 
