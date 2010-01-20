@@ -220,12 +220,11 @@ module Rack     #:nodoc:
 
         details = express_gateway.details_for params['token']
 
-        express_gateway.purchase payment.amount_in_cents, :ip       => request.ip,
-                                                          :token    => params['token'],
-                                                          :payer_id => details.payer_id
+        payment.raw_express_response = express_gateway.purchase payment.amount_in_cents, :ip       => request.ip,
+                                                                                         :token    => params['token'],
+                                                                                         :payer_id => details.payer_id
 
-        # should be complete ...
-        [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
+        render_on_success
       end
 
     end

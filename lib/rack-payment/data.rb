@@ -5,9 +5,14 @@ module Rack     #:nodoc:
       extend Forwardable
 
       def_delegators :response, :raw_authorize_response, :raw_capture_response, :amount_paid,
-                      :raw_authorize_response=, :raw_capture_response=
+                      :raw_authorize_response=, :raw_capture_response=, :raw_express_response,
+                      :raw_express_response=
 
       attr_accessor :amount, :credit_card, :billing_address, :errors, :use_express, :response
+
+      def cc
+        credit_card
+      end
 
       def use_express
         @use_express.nil? ? false : @use_express # default to false

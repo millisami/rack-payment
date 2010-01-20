@@ -15,7 +15,7 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
   end
 
   use Rack::Session::Cookie
-  use Rack::Payment
+  use Rack::Payment, :on_success => '/success'
 
   use_in_file_templates!
 
@@ -27,6 +27,11 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
     self.class.rack_payment_instance = env['rack.payment'] # <--- should be availabe via helper
     self.class.gateway               = env['rack.payment'].gateway
     haml :index
+  end
+
+  get '/success' do
+    # We need to find out what #purchase really returns ...
+    "Order successful. payment.amount: #{ payment.amount }. payment.amount_paid: #{ payment.amount_paid }"
   end
 
   post '/' do

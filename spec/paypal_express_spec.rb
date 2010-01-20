@@ -44,10 +44,13 @@ describe Rack::Payment, 'PayPal Express' do
 
     last_response.should contain('Order successful')
     last_response.should contain('9.95')
+    last_response.should contain('payment.amount: 9.95')
+    last_response.should contain('payment.amount_paid: 9.95') # <--- should update amount_paid
   end
 
   it 'displays errors if the order completion page is visited with an invalid token'
 
   it 'handles when a user cancels (redirects the user back to the page they came from)'
+  # should not update amount paid
 
 end
