@@ -12,7 +12,7 @@ class SimpleAppWithOwnCreditCardPage < Sinatra::Base
   class << self; attr_accessor :gateway; end
 
   use Rack::Session::Cookie
-  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ]
+  use Rack::Payment, YAML.load_file(File.dirname(__FILE__) + '/../.gateway.yml')[ ENV['RACK_ENV'] ].merge(:on_success => '/success')
 
   use_in_file_templates!
 
@@ -30,6 +30,10 @@ class SimpleAppWithOwnCreditCardPage < Sinatra::Base
     sass :styles
   end
 
+  get '/success' do
+    haml :success
+  end
+
   post '/' do
     payment.amount = params[:monies]
     payment.credit_card.update     params[:credit_card]
@@ -41,9 +45,19 @@ end
 
 __END__
 
+@@ success
+
+Order successful.
+
+%p== payment.amount: #{ payment.amount }
+%p== payment.amount_paid: #{ payment.amount_paid.inspect }
+
 @@ index
 
 %h1 Custom Page
+
+%p== payment.amount: #{ payment.amount }
+%p== payment.amount_paid: #{ payment.amount_paid.inspect }
 
 - unless payment.errors.empty?
   %p= payment.errors.join(', ')

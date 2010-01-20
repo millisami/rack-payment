@@ -102,12 +102,12 @@ module Rack     #:nodoc:
         # Try to #authorize (if no errors so far)
         if errors.empty?
           begin
-            payment.authorize_response = gateway.authorize payment.amount_in_cents, 
+            payment.raw_authorize_response = gateway.authorize payment.amount_in_cents, 
                                                            payment.credit_card.active_merchant_card, 
                                                            :ip => request.ip
-            errors << payment.authorize_response.message unless payment.authorize_response.success?
+            errors << payment.raw_authorize_response.message unless payment.raw_authorize_response.success?
           rescue ActiveMerchant::Billing::Error => error
-            payment.authorize_response = OpenStruct.new :success? => false, :message => error.message
+            payment.raw_authorize_response = OpenStruct.new :success? => false, :message => error.message
             errors << error.message
           end
         end
@@ -115,11 +115,11 @@ module Rack     #:nodoc:
         # Try to #capture (if no errors so far)
         if errors.empty?
           begin
-            payment.capture_response = gateway.capture payment.amount_in_cents, payment.authorize_response.authorization
-            errors << payment.capture_response.message unless payment.capture_response.success?
+            payment.raw_capture_response = gateway.capture payment.amount_in_cents, payment.raw_authorize_response.authorization
+            errors << payment.raw_capture_response.message unless payment.raw_capture_response.success?
           rescue ActiveMerchant::Billing::Error => error
-            payment.capture_response = OpenStruct.new :success? => false, :message => error.message
-            errors << payment.capture_response.message
+            payment.raw_capture_response = OpenStruct.new :success? => false, :message => error.message
+            errors << payment.raw_capture_response.message
           end
         end
 

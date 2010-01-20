@@ -2,7 +2,12 @@ module Rack     #:nodoc:
   class Payment #:nodoc:
 
     class Data
-      attr_accessor :amount, :capture_response, :authorize_response, :credit_card, :billing_address, :errors, :use_express
+      extend Forwardable
+
+      def_delegators :response, :raw_authorize_response, :raw_capture_response, :amount_paid,
+                      :raw_authorize_response=, :raw_capture_response=
+
+      attr_accessor :amount, :credit_card, :billing_address, :errors, :use_express, :response
 
       def use_express
         @use_express.nil? ? false : @use_express # default to false
@@ -26,6 +31,10 @@ module Rack     #:nodoc:
 
       def billing_address
         @billing_address ||= BillingAddress.new
+      end
+
+      def response
+        @response ||= Response.new
       end
 
       def amount= value

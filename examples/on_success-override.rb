@@ -44,10 +44,10 @@ __END__
 %p== You should have been charged #{ payment.amount } (#{ payment.amount_in_cents })
 
 %p Raw capture response:
-%pre~ payment.capture_response.inspect
+%pre~ payment.response.raw_capture_response.inspect
 
 %p Raw authoriziation request:
-%pre~ payment.authorize_response.inspect
+%pre~ payment.response.raw_authorize_response.inspect
 
 @@ index
 

@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'rack-payment/payment'
 require 'rack-payment/request'
+require 'rack-payment/response'
 require 'rack-payment/credit_card'
 require 'rack-payment/billing_address'
 require 'rack-payment/data'

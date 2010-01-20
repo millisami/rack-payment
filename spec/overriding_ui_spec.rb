@@ -81,6 +81,8 @@ describe Rack::Payment, 'overriding UI' do
 
     click_button 'Purchase'
 
+    last_response.should contain('payment.amount: 15.95')
+    last_response.should contain('payment.amount_paid: nil')
     last_response.should_not contain('Order successful')
     last_response.should contain('failure')
     last_response.should contain('Custom Page')
@@ -90,6 +92,8 @@ describe Rack::Payment, 'overriding UI' do
 
     last_response.should contain('Order successful') # regular old order successful page
     last_response.should contain('15.95')
+    last_response.should contain('payment.amount: 15.95')
+    last_response.should contain('payment.amount_paid: 15.95')
   end
 
   it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
