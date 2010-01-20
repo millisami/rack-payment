@@ -1,7 +1,11 @@
 module Rack     #:nodoc:
   class Payment #:nodoc:
 
-    # ...
+    # When you call {Rack::Purchase#call}, a new {Rack::Payment::Request} instance 
+    # gets created and it does the actual logic to figure out what to do.
+    #
+    # The {#finish} method "executes" this class (it figures out what to do).
+    #
     class Request
       extend Forwardable
 
@@ -9,19 +13,31 @@ module Rack     #:nodoc:
                                         :env_instance_variable, :env_data_variable, :session_variable,
                                         :rack_session_variable, :express_ok_path, :express_cancel_path,
                                         :built_in_form_path
+      
       def_delegators :request, :params
 
-      # raw ENV hash
+      # @return [Hash] Raw Rack env Hash
       attr_accessor :env
 
-      # Rack::Request
+      # An instance of Rack::Request that wraps our {#env}.
+      # It makes it much easier to access the params, path, method, etc.
+      # @return Rack::Request
       attr_accessor :request
 
-      # Rack::Response that results from calling the Rack application
+      # Rack::Response that results from calling the actual Rack application.
+      # [Rack::Response]
       attr_accessor :app_response
 
+      # Whether or not this request's POST came from our built in forms.
+      # 
+      #  * If true, we think the POST came from our form.
+      #  * If false, we think the POST came from a user's custom form.
+      #
+      # @return [true, false]
       attr_accessor :post_came_from_the_built_in_forms
 
+      # The instance of {Rack::Payment} that this Request is for
+      # @return [Rack::Payment]
       attr_accessor :payment_instance
 
       def post_came_from_the_built_in_forms?
@@ -44,7 +60,13 @@ module Rack     #:nodoc:
         session[:amount] = value
       end
 
-      # ...
+      # Instantiates a {Rack::Payment::Request} object which basically wraps a 
+      # single request and handles all of the logic to determine what to do.
+      #
+      # Calling {#finish} will return the actual Rack response
+      #
+      # @param [Hash] The Rack Request environment variables
+      # @param [Rack::Payment] The instance of Rack::Payment handling this request
       def initialize env, payment_instance
         @payment_instance = payment_instance
 
@@ -55,29 +77,37 @@ module Rack     #:nodoc:
         self.app_response = Rack::Response.new raw_rack_response[2], raw_rack_response[0], raw_rack_response[1]
       end
 
-      # The final rack response.  This "runs" the request.
+      # Generates and returns the final rack response.
+      #
+      # This "runs" the request.  It's the main logic in {Rack::Payment}!
+      #
+      # @return [Array] A Rack response, eg. `[200, {}, ["Hello World"]]`
       def finish
-        if app_response.status == 402 # Payment Required
 
-          self.amount_in_session = payment.amount # we need to put this in the session ... i forget why ...
-
+        # The application returned a 402 ('Payment Required')
+        if app_response.status == 402
+          self.amount_in_session = payment.amount
           return process_credit_card if payment.use_express?
-
           if payment.card_or_address_partially_filled_out?
-            return process_credit_card # You've filled stuff out!  Try to process ...
+            return process_credit_card
           else
-            return credit_card_and_billing_info_response # Payment Required!
+            return credit_card_and_billing_info_response
           end
 
+        # The requested path matches our built-in form
         elsif request.path_info == built_in_form_path
           self.post_came_from_the_built_in_forms = true
-          return process_credit_card # Try to process the request
+          return process_credit_card 
 
+        # The requested path matches our callback for express payments
         elsif request.path_info == express_ok_path
           return process_express_payment_callback
         end
 
-        app_response.finish # default to returning the application's response
+        # If we haven't returned anything, there was no reason for the 
+        # middleware to handle this request so we return the real 
+        # application's response.
+        app_response.finish
       end
 
       def process_credit_card
