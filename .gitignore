@@ -1,3 +1,5 @@
 *.sw?
 webrat*
 .gateway.yml
+doc
+.yardoc
