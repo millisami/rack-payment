@@ -21,6 +21,11 @@ module Rack     #:nodoc:
         self.use_express = true 
       end
 
+      # helper for getting the src of the express checkout image
+      def paypal_express_button
+        'https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif'
+      end
+
       def errors
         @errors ||= []
       end

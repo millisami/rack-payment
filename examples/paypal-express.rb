@@ -31,7 +31,7 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
 
   post '/' do
     payment.amount      = params[:monies]
-    payment.use_express = params[:button] == 'Checkout with PayPal'
+    payment.use_express = params[:button] == 'Checkout with Paypal'
     [ 402, {}, ['Payment Required'] ]
   end
 
@@ -41,12 +41,22 @@ __END__
 
 @@ index
 
+%style
+  :sass
+    input.paypal_checkout
+      :background-image url("https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif")
+      :background-color transparent
+      :color            transparent
+      :border           none
+      :height           42px
+      :width            145px
+
 %form{ :action => '/', :method => 'post' }
   %label
     How many monies would you like to spend?
     %input{ :type => 'text', :id => 'monies', :name => 'monies' }
   %input{ :type => 'submit', :name => 'button', :value => 'Checkout' }
-  %input{ :type => 'submit', :name => 'button', :value => 'Checkout with PayPal' }
+  %input.paypal_checkout{ :type => 'submit', :name => 'button', :value => 'Checkout with Paypal' }
 
 @@ layout
 

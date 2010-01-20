@@ -30,6 +30,7 @@ describe Rack::Payment, 'PayPal Express' do
     klass.rack_payment_instance.express_gateway.should be_a(ActiveMerchant::Billing::BogusExpressGateway)
 
     fill_in :monies, :with => 9.95
+    last_response.body.should include('https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif')
     click_button 'Checkout with PayPal'
 
     # should be redirected to the appropriate PayPal URL to actually fill stuff out.

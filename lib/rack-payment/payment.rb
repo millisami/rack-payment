@@ -14,7 +14,8 @@ module Rack #:nodoc:
 
     # Default file names that we used to look for yml configuration.
     # You can change {Rack::Payment::yml_file_names} to override.
-    YML_FILE_NAMES = %w( .rack-payment.yml rack-payment.yml config/rack-payment.yml payment.yml config/payment.yml )
+    YML_FILE_NAMES = %w( .rack-payment.yml rack-payment.yml config/rack-payment.yml 
+                         ../config/rack-payment payment.yml ../payment.yml config/payment.yml )
 
     class << self
 
