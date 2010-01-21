@@ -16,12 +16,12 @@ module Rack     #:nodoc:
       
       def_delegators :request, :params
 
-      # TODO test these ?
+      # TODO test these!!!
       def express_ok_url
-        ::File.join request.url, express_ok_path
+        ::File.join request.url.sub(request.path_info, ''), express_ok_path
       end
       def express_cancel_url
-        ::File.join request.url, express_cancel_path
+        ::File.join request.url.sub(request.path_info, ''), express_cancel_path
       end
 
       # @return [Hash] Raw Rack env Hash
@@ -197,6 +197,7 @@ module Rack     #:nodoc:
           payment.errors = errors
           new_env = env.clone
           new_env['REQUEST_METHOD'] = 'GET'
+          new_env['PATH_INFO'] = on_success if request.path_info == express_ok_path # if express, we render on_success
           app.call(new_env)
         end
       end
