@@ -13,6 +13,10 @@ module Rack     #:nodoc:
       alias capture raw_capture_response
       alias express raw_express_response
 
+      def has_responses?
+        auth or capture or express
+      end
+
       def express?
         express != nil
       end
