@@ -30,7 +30,6 @@ class SimpleAppWithPayPalExpress < Sinatra::Base
   end
 
   get '/success' do
-    # We need to find out what #purchase really returns ...
     "Order successful. payment.amount: #{ payment.amount }. payment.amount_paid: #{ payment.amount_paid }"
   end
 

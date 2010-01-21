@@ -13,12 +13,36 @@ module Rack     #:nodoc:
       alias capture raw_capture_response
       alias express raw_express_response
 
+      def express?
+        express != nil
+      end
+
       def amount_paid
-        (raw_capture_response.params['paid_amount'].to_f / 100) if success?
+        if success?
+          if express?
+            express_amound_paid
+          else
+            (raw_capture_response.params['paid_amount'].to_f / 100)
+          end
+        end
+      end
+
+      def express_amound_paid
+        if success?
+          raw_express_response.params['gross_amount'].to_f
+        end
       end
 
       def success?
-        auth and auth.success? and capture and capture.success?
+        if express?
+          express_success?
+        else
+          auth and auth.success? and capture and capture.success?
+        end
+      end
+
+      def express_success?
+        raw_express_response.success?
       end
 
     end

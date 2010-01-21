@@ -16,6 +16,14 @@ module Rack     #:nodoc:
       
       def_delegators :request, :params
 
+      # TODO test these ?
+      def express_ok_url
+        ::File.join request.url, express_ok_path
+      end
+      def express_cancel_url
+        ::File.join request.url, express_cancel_path
+      end
+
       # @return [Hash] Raw Rack env Hash
       attr_accessor :env
 
@@ -168,9 +176,13 @@ module Rack     #:nodoc:
         #      and they should be overridable
 
         # TODO go BOOM if the express gateway isn't set!
+      
+        # TODO catch exceptions
+
+        # TODO catch ! success?
         response = express_gateway.setup_purchase payment.amount_in_cents, :ip                => request.ip, 
-                                                                           :return_url        => express_ok_path,
-                                                                           :cancel_return_url => express_cancel_path
+                                                                           :return_url        => express_ok_url,
+                                                                           :cancel_return_url => express_cancel_url
 
         [ 302, {'Location' => express_gateway.redirect_url_for(response.token)}, ['Redirecting to PayPal Express Checkout'] ]
       end
