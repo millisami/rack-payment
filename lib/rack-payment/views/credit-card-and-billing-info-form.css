@@ -1,0 +1,50 @@
+div.rack-payment {
+  margin:     2em;
+  text-align: center;
+}
+
+div.rack-payment div.errors {
+  border:        2px solid red;
+  width:         60%;
+  margin:        auto;
+  margin-bottom: 1em;
+}
+
+div.rack-payment div.errors p {
+  font-weight: bold;
+  font-size:   1.1em;
+}
+
+div.rack-payment ul.errors {
+  list-style-type: none;
+}
+
+div.rack-payment fieldset {
+  margin:                auto;
+  width:                 70%;
+  padding:               1em;
+  margin-bottom:         1em;
+  -moz-border-radius:    1em;
+  -webkit-border-radius: 1em;
+  -moz-box-shadow:       0.4em 0.4em 0.5em #3d4e5e;
+  -webkit-box-shadow:    0.4em 0.4em 0.5em #3d4e5e;
+}
+
+div.rack-payment fieldset legend {
+  font-weight: bold;
+}
+
+div.rack-payment fieldset .group {
+  float: left;
+  margin-right: 2em;
+}
+
+div.rack-payment form input {
+  font-size:     1.0em;
+  display:       block;
+  margin-bottom: 0.5em;
+}
+
+div.rack-payment form input[type=submit] {
+  margin: auto;
+}

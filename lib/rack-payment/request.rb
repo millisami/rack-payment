@@ -216,6 +216,7 @@ module Rack     #:nodoc:
       end
 
       def credit_card_and_billing_info_response errors = nil
+        css  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
 
@@ -223,7 +224,8 @@ module Rack     #:nodoc:
         @errors  = errors
         @params  = params
 
-        html = ERB.new(erb).result(binding)
+        html = "<style style='text'/css'>\n#{ ::File.read(css) }\n</style>"
+        html << ERB.new(erb).result(binding)
         
         [ 200, {'Content-Type' => 'text/html'}, html ]
       end
