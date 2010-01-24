@@ -79,6 +79,15 @@ module Rack     #:nodoc:
         credit_card.partially_filled_out? or billing_address.partially_filled_out?
       end
 
+      # The same as {#purchase} but it raises an exception on error.
+      def purchase! options
+        if response = purchase(options)
+          true
+        else
+          raise "Purchase failed.  #{ errors.join(', ') }"
+        end
+      end
+
       # Fires off a purchase!
       #
       # This resets #errors and #response
