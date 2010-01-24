@@ -137,7 +137,7 @@ module Rack     #:nodoc:
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
 
-        html = "<style style='text'/css'>\n#{ ::File.read(css) }\n</style>"
+        html = "<style type='text/css'>\n#{ ::File.read(css) }\n</style>"
         html << ERB.new(erb).result(binding)
       end
     end

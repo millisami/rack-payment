@@ -202,7 +202,12 @@ module Rack     #:nodoc:
       end
 
       def credit_card_and_billing_info_response
-        [ 200, {'Content-Type' => 'text/html'}, payment.form(built_in_form_path) ]
+        form_html = payment.form built_in_form_path
+        layout    = ::File.dirname(__FILE__) + '/views/layout.html'
+        html      = ::File.read(layout)
+        html      = html.sub 'CONTENT', form_html
+
+        [ 200, {'Content-Type' => 'text/html'}, html ]
       end
 
       def process_express_payment_callback
