@@ -21,7 +21,7 @@ module Rack     #:nodoc:
                                 :raw_capture_response,   :raw_capture_response=, 
                                 :raw_express_response,   :raw_express_response=
 
-      def_delegators :rack_payment, :gateway
+      def_delegators :rack_payment, :gateway, :built_in_form_path
 
       attr_accessor :rack_payment, :amount, :credit_card, :billing_address, :errors, :use_express, :response
 
@@ -125,6 +125,20 @@ module Rack     #:nodoc:
         end
 
         return errors.empty?
+      end
+
+      # Returns the HTML for the built in form
+      #
+      # By default, the form will POST to the current URL (action='')
+      #
+      # You can pass a different URL for the form action
+      def form post_to = ''
+        css  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
+        view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
+        erb  = ::File.read view
+
+        html = "<style style='text'/css'>\n#{ ::File.read(css) }\n</style>"
+        html << ERB.new(erb).result(binding)
       end
     end
 

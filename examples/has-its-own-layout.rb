@@ -8,9 +8,6 @@ ActiveMerchant::Billing::Base.mode = :test
 # Has its own page with CC / Billing info
 class SimpleAppWithOwnLayout < Sinatra::Base
 
-  # For our specs, we need access to this gateway instance
-  class << self; attr_accessor :gateway; end
-
   use Rack::Session::Cookie
   use Rack::Payment, :on_success => '/success'
 
@@ -21,8 +18,16 @@ class SimpleAppWithOwnLayout < Sinatra::Base
   end
 
   get '/' do
-    self.class.gateway = env['rack.payment'].gateway
+    payment.amount = params[:amount].to_f
     haml :index
+  end
+
+  post '/' do
+    payment.amount = params[:monies]
+    payment.credit_card.update     params[:credit_card]
+    payment.billing_address.update params[:address]
+
+    [ 402, {}, ['Payment Required'] ] # will re-render the GET if invalid (?)
   end
 
   get '/styles.css' do
@@ -32,14 +37,6 @@ class SimpleAppWithOwnLayout < Sinatra::Base
 
   get '/success' do
     haml :success
-  end
-
-  post '/' do
-    payment.amount = params[:monies]
-    payment.credit_card.update     params[:credit_card]
-    payment.billing_address.update params[:address]
-
-    [ 402, {}, ['Payment Required'] ]
   end
 end
 
@@ -56,7 +53,14 @@ Order successful.
 
 %h1 Custom Page
 
+%p== payment.amount: #{ payment.amount }
+%p== payment.amount_paid: #{ payment.amount_paid.inspect }
+
+%h2 Here be my form!
+
 = payment.form
+
+%h2 And this is after the form
 
 @@ layout
 

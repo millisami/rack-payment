@@ -130,12 +130,23 @@ module Rack     #:nodoc:
         # The params *should* be set on the payment data object, but we accept 
         # POST requests too, so we check the POST variables for credit_card 
         # or billing_address fields
+        #
+        # TODO deprecate this in favor of the more conventional credit_card[number] syntax?
+        #
         params.each do |field, value|
           if field =~ /^credit_card_(\w+)/
             payment.credit_card.update $1 => value
           elsif field =~ /billing_address_(\w+)/
             payment.billing_address.update $1 => value
           end 
+        end
+
+        # We also accept credit_card[number] style params, which Rack supports
+        if params['credit_card'] and params['credit_card'].respond_to?(:each)
+          payment.credit_card.update params['credit_card']
+        end
+        if params['billing_address'] and params['billing_address'].respond_to?(:each)
+          payment.billing_address.update params['billing_address']
         end
 
         # Purchase!
@@ -191,14 +202,7 @@ module Rack     #:nodoc:
       end
 
       def credit_card_and_billing_info_response
-        css  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
-        view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
-        erb  = ::File.read view
-
-        html = "<style style='text'/css'>\n#{ ::File.read(css) }\n</style>"
-        html << ERB.new(erb).result(binding)
-        
-        [ 200, {'Content-Type' => 'text/html'}, html ]
+        [ 200, {'Content-Type' => 'text/html'}, payment.form(built_in_form_path) ]
       end
 
       def process_express_payment_callback
