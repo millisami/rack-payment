@@ -30,7 +30,7 @@ describe Rack::Payment, 'default UI' do
     fill_in_valid_billing_address
     click_button 'Complete Purchase'
 
-    last_response.should     contain('first_name is required')
+    last_response.should     contain('First Name is required')
     last_response.should_not contain('Order successful')
 
     # Make sure #authorize is called with the right arguments (we return what it normally would)
@@ -46,7 +46,7 @@ describe Rack::Payment, 'default UI' do
 
     last_response.should     contain('Order successful')
     last_response.should     contain('9.95')
-    last_response.should_not contain('first_name is required')
+    last_response.should_not contain('First Name is required')
   end
 
   it 'errors are displayed if credit card is invalid [and we can fix it]' do

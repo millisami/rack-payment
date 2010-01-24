@@ -62,7 +62,7 @@ module Rack     #:nodoc:
       def errors
         REQUIRED.inject([]) do |errors, required_attribute_name|
           value = send required_attribute_name
-          errors << "#{ required_attribute_name } is required" if value.nil? or value.empty?
+          errors << "#{ required_attribute_name.titleize } is required" if value.nil? or value.empty?
           errors
         end
       end

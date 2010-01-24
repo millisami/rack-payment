@@ -69,7 +69,7 @@ describe 'Single Purchase (without web app)' do
     payment.amount = 15.95
 
     payment.purchase(:ip => '127.0.0.1').should be_false
-    payment.errors.join(', ').should include('last_name')
+    payment.errors.join(', ').should include('Last Name is required')
   end
 
   it 'handles #authorize/#capture errors' do
