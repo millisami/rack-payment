@@ -19,11 +19,10 @@ div.rack-payment ul.errors {
 }
 
 div.rack-payment fieldset {
-  width:                 43%;
+  width:                 41%;
+  margin-left:           2%;
+  margin-right:          2%;
   float:                 left;
-  padding:               1em;
-  margin-right:          1.5em;
-  margin-left:           1.5em;
   text-align:            left;
   -moz-border-radius:    1em;
   -webkit-border-radius: 1em;
