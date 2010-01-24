@@ -27,13 +27,13 @@
 
       <div class='group'>
         <label for='credit_card_first_name'>First Name</label>
-        <input autofocus='true' type='text' name='credit_card_first_name' value='<%= @params['credit_card_first_name'] %>' />
+        <input type='text' id='credit_card_first_name' name='credit_card_first_name' value='<%= @params['credit_card_first_name'] %>' autofocus='true' />
 
         <label for='credit_card_last_name'>Last Name</label>
-        <input type='text' name='credit_card_last_name' value='<%= @params['credit_card_last_name'] %>' />
+        <input type='text' id='credit_card_last_name' name='credit_card_last_name' value='<%= @params['credit_card_last_name'] %>' />
 
         <label for='credit_card_number'>Card Number</label>
-        <input type='text' name='credit_card_number' value='<%= @params['credit_card_number'] %>' />
+        <input type='text' id='credit_card_number' name='credit_card_number' value='<%= @params['credit_card_number'] %>' />
       </div>
 
       <div class='group'>
@@ -47,7 +47,7 @@
         </select>
 
         <label for='credit_card_cvv'>CVV</label>
-        <input type='text' name='credit_card_cvv' value='<%= @params['credit_card_cvv'] %>' />
+        <input type='text' id='credit_card_cvv' name='credit_card_cvv' value='<%= @params['credit_card_cvv'] %>' />
 
         <label for='credit_card_expiration_month'>Expiration</label>
         <select id='credit_card_expiration_month' name='credit_card_expiration_month'>
@@ -72,14 +72,14 @@
       <div class='group'>
         <% %w( name address1 city ).each do |field| %>
           <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
         <% end %>
       </div>
 
       <div class='group'>
         <% %w( state country zip ).each do |field| %>
           <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
         <% end %>
       </div>
     </fieldset>

@@ -41,7 +41,7 @@ module Rack #:nodoc:
       'express_ok_path'       => '/rack.payment/express.callback/ok',
       'express_cancel_path'   => '/rack.payment/express.callback/cancel',
       'env_instance_variable' => 'rack.payment',
-      'env_data_variable'     => 'rack.payment.data',
+      'env_helper_variable'   => 'rack.payment.helper',
       'session_variable'      => 'rack.payment',
       'rack_session_variable' => 'rack.session'
     }
@@ -81,9 +81,9 @@ module Rack #:nodoc:
 
     # The name of the Rack env variable to use to access data about 
     # the purchase being made.  Getting this out of the Rack env 
-    # gives you a {Rack::Payment::Data} object.
+    # gives you a {Rack::Payment::Helper} object.
     # @return [String]
-    attr_accessor :env_data_variable
+    attr_accessor :env_helper_variable
 
     # The name of the variable we put into the Rack::Session 
     # to store anything that {Rack::Payment} needs to keep track 

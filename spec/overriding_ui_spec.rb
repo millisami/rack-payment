@@ -97,6 +97,32 @@ describe Rack::Payment, 'overriding UI' do
     last_response.should contain('payment.amount_paid: 15.95')
   end
 
+  it 'should be able to use your own layout and spit out the html for the form inside it' do
+    pending 'changing fields to use foo[bar] first'
+    set_rack_app SimpleAppWithOwnLayout.new
+
+    visit '/'
+    last_response.should contain('Custom Page')
+    fill_in :monies, :with => 15.95 # it has the money and credit card info, all on the same page
+
+    fill_in_invalid_credit_card
+    click_button 'Purchase'
+
+    last_response.should contain('payment.amount: 15.95')
+    last_response.should contain('payment.amount_paid: nil')
+    last_response.should_not contain('Order successful')
+    last_response.should contain('failure')
+    last_response.should contain('Custom Page')
+
+    fill_in_valid_credit_card
+    click_button 'Purchase'
+
+    last_response.should contain('Order successful') # regular old order successful page
+    last_response.should contain('15.95')
+    last_response.should contain('payment.amount: 15.95')
+    last_response.should contain('payment.amount_paid: 15.95')
+  end
+
   it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
 
 end

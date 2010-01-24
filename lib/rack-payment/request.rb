@@ -10,7 +10,7 @@ module Rack     #:nodoc:
       extend Forwardable
 
       def_delegators :payment_instance, :app, :gateway, :express_gateway, :on_success, :built_in_form_path, 
-                                        :env_instance_variable, :env_data_variable, :session_variable,
+                                        :env_instance_variable, :env_helper_variable, :session_variable,
                                         :rack_session_variable, :express_ok_path, :express_cancel_path,
                                         :built_in_form_path
       
@@ -53,7 +53,7 @@ module Rack     #:nodoc:
       end
 
       def payment
-        env[env_data_variable] ||= Rack::Payment::Data.new
+        env[env_helper_variable] ||= Rack::Payment::Helper.new
       end
 
       def session

@@ -1,12 +1,25 @@
 module Rack     #:nodoc:
   class Payment #:nodoc:
 
-    class Data
+    # When you include {Rack::Payment::Methods} into your application, you 
+    # get a {#payment} method/object which gives you an instance of {Rack::Payment::Helper}
+    #
+    # {Rack::Payment::Helper} is the main API for working with {Rack::Payment}.  You use it to:
+    # 
+    #  * Set the {#amount} you want to charge someone
+    #  * Spit out the HTML for a credit card / billing information {#form} into your own application
+    #  * Set the {#credit_card} and {#billing_address} to be used when processing the payment
+    #  * Get {#errors} if something didn't work
+    #  * Get the {#response} from your billing gateway after charging (or attempting to charge) someone
+    #  * Get the URL to the image for a {#paypal_express_button}
+    #
+    class Helper
       extend Forwardable
 
-      def_delegators :response, :raw_authorize_response, :raw_capture_response, :amount_paid,
-                      :raw_authorize_response=, :raw_capture_response=, :raw_express_response,
-                      :raw_express_response=
+      def_delegators :response, :amount_paid,
+                                :raw_authorize_response, :raw_authorize_response=,
+                                :raw_capture_response,   :raw_capture_response=, 
+                                :raw_express_response,   :raw_express_response=
 
       attr_accessor :amount, :credit_card, :billing_address, :errors, :use_express, :response
 

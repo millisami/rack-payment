@@ -123,7 +123,7 @@ describe Rack::Payment, 'configuration' do
   end
 
   it 'can set the name of the env[] variable that the Rack::Payment::Data instance is made available in' do
-    can_get_and_set_attribute :env_data_variable, 'rack.payment.data'
+    can_get_and_set_attribute :env_helper_variable, 'rack.payment.helper'
   end
 
   it 'can set the name of the session variable that Rack::Payment uses to persist data that needs to be persisted betweetn requests' do
