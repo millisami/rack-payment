@@ -140,6 +140,38 @@ module Rack     #:nodoc:
         html = "<style type='text/css'>\n#{ ::File.read(css) }\n</style>"
         html << ERB.new(erb).result(binding)
       end
+
+      def options_for_expiration_month selected = nil
+        %w( 01 02 03 04 05 06 07 08 09 10 11 12 ).map { |month|
+          if selected and selected.to_s == month.to_s
+            "<option selected='selected'>#{ month }</option>"
+          else
+            "<option>#{ month }</option>"
+          end
+        }.join
+      end
+
+      def options_for_expiration_year selected = nil
+        (Date.today.year..(Date.today.year + 15)).map { |year|
+          if selected and selected.to_s == year.to_s
+            "<option selected='selected'>#{ year }</option>"
+          else
+            "<option>#{ year }</option>"
+          end
+        }.join
+      end
+
+      def options_for_credit_card_type selected = nil
+        [ ['visa', 'Visa'], ['master', 'MasterCard'], ['american_express', 'American Express'], 
+          ['discover', 'Discover'] ].map { |value, name|
+        
+          if selected and selected.to_s == value.to_s
+            "<options value='#{ value }' selected='selected'>#{ name }</option>"
+          else
+            "<options value='#{ value }'>#{ name }</option>"
+          end
+        }.join
+      end
     end
 
   end

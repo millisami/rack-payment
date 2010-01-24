@@ -34,6 +34,7 @@
       <div class='group'>
         <label for='credit_card_type'>Card Type</label>
         <select id='credit_card_type' name='credit_card[type]' />
+          <%= options_for_credit_card_type credit_card.type %>
           <%= [ ['visa', 'Visa'], ['master', 'MasterCard'], ['american_express', 'American Express'], ['discover', 'Discover'] ].
             map {|value, name| 
               selected = credit_card.type == value ? " selected='selected'" : nil
@@ -46,16 +47,10 @@
 
         <label for='credit_card_expiration_month'>Expiration</label>
         <select id='credit_card_expiration_month' name='credit_card[expiration_month]'>
-          <%= %w( 01 02 03 04 05 06 07 08 09 10 11 12 ).map {|n| 
-            selected = credit_card.month == n ? " selected='selected'" : nil
-            "<option value='#{n}'#{ selected }>#{n}</option>" } 
-          %>
+          <%= options_for_expiration_month credit_card.month %>
         </select>
         <select id='credit_card_expiration_year' name='credit_card[expiration_year]'>
-          <%= (Date.today.year..(Date.today.year + 15)).map {|n| 
-            selected = credit_card.year == n.to_s ? " selected='selected'" : nil
-            "<option value='#{n}'#{ selected }>#{n}</option>" } 
-          %>
+          <%= options_for_expiration_year credit_card.year %>
         </select>
 
       </div>
