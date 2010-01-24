@@ -16,6 +16,8 @@ module Rack     #:nodoc:
       
       def_delegators :request, :params
 
+      def_delegators :payment, :errors, :credit_card, :billing_address
+
       # TODO test these!!!
       def express_ok_url
         ::File.join request.url.sub(request.path_info, ''), express_ok_path
@@ -125,7 +127,7 @@ module Rack     #:nodoc:
       def process_credit_card
         payment.amount ||= amount_in_session
 
-        # the params *should* be set on the payment data object, but we accept 
+        # The params *should* be set on the payment data object, but we accept 
         # POST requests too, so we check the POST variables for credit_card 
         # or billing_address fields
         params.each do |field, value|
@@ -163,7 +165,7 @@ module Rack     #:nodoc:
       def render_on_error errors
         if post_came_from_the_built_in_forms?
           # we POSTed from our form, so let's re-render our form
-          credit_card_and_billing_info_response errors
+          credit_card_and_billing_info_response
         else
           # pass along the errors to the application's custom page, which should be the current URL
           # so we can actually just re-call the same env (should display the form) using a GET
@@ -188,14 +190,10 @@ module Rack     #:nodoc:
         end
       end
 
-      def credit_card_and_billing_info_response errors = nil
+      def credit_card_and_billing_info_response
         css  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
-
-        @this    = self
-        @errors  = errors
-        @params  = params
 
         html = "<style style='text'/css'>\n#{ ::File.read(css) }\n</style>"
         html << ERB.new(erb).result(binding)

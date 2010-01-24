@@ -1,39 +1,37 @@
-<!-- 
-  TODO use helper for select options for credit card type
-  TODO use helper for select options for expiration
-  TODO try getting rid of the rack.payment field
--->
+<%
+  # TODO use helper for select options for credit card type
+  # TODO use helper for select options for expiration
+%>
 
 <div class='rack-payment'>
 
   <h1>Credit Card and Billing Info</h1>
 
-  <% if @errors and not @errors.empty? %>
+  <% if payment.errors and not payment.errors.empty? %>
     <div class='errors'>
       <p>There were problems processing your request:</p>
       <ul class='errors'>
-        <% for error in @errors %>
+        <% for error in payment.errors %>
           <li><%= error %></li>
         <% end %>
       </ul>
     </div>
   <% end %>
 
-  <form action='<%= @this.built_in_form_path %>' method='post'>
-    <input type='hidden' name='rack.payment' value='true' />
+  <form action='<%= built_in_form_path %>' method='post'>
 
     <fieldset>
       <legend>Credit Card</legend>
 
       <div class='group'>
         <label for='credit_card_first_name'>First Name</label>
-        <input type='text' id='credit_card_first_name' name='credit_card_first_name' value='<%= @params['credit_card_first_name'] %>' autofocus='true' />
+        <input type='text' id='credit_card_first_name' name='credit_card_first_name' value='<%= credit_card.first_name %>' autofocus='true' />
 
         <label for='credit_card_last_name'>Last Name</label>
-        <input type='text' id='credit_card_last_name' name='credit_card_last_name' value='<%= @params['credit_card_last_name'] %>' />
+        <input type='text' id='credit_card_last_name' name='credit_card_last_name' value='<%= credit_card.last_name %>' />
 
         <label for='credit_card_number'>Card Number</label>
-        <input type='text' id='credit_card_number' name='credit_card_number' value='<%= @params['credit_card_number'] %>' />
+        <input type='text' id='credit_card_number' name='credit_card_number' value='<%= credit_card.number %>' />
       </div>
 
       <div class='group'>
@@ -41,24 +39,24 @@
         <select id='credit_card_type' name='credit_card_type' />
           <%= [ ['visa', 'Visa'], ['master', 'MasterCard'], ['american_express', 'American Express'], ['discover', 'Discover'] ].
             map {|value, name| 
-              selected = @params['credit_card_type'] == value ? " selected='selected'" : nil
+              selected = credit_card.type == value ? " selected='selected'" : nil
               "<option value='#{ value }'#{ selected }'>#{ name }</option>" }
           %>
         </select>
 
         <label for='credit_card_cvv'>CVV</label>
-        <input type='text' id='credit_card_cvv' name='credit_card_cvv' value='<%= @params['credit_card_cvv'] %>' />
+        <input type='text' id='credit_card_cvv' name='credit_card_cvv' value='<%= credit_card.cvv %>' />
 
         <label for='credit_card_expiration_month'>Expiration</label>
         <select id='credit_card_expiration_month' name='credit_card_expiration_month'>
           <%= %w( 01 02 03 04 05 06 07 08 09 10 11 12 ).map {|n| 
-            selected = @params['credit_card_expiration_month'] == n ? " selected='selected'" : nil
+            selected = credit_card.month == n ? " selected='selected'" : nil
             "<option value='#{n}'#{ selected }>#{n}</option>" } 
           %>
         </select>
         <select id='credit_card_expiration_year' name='credit_card_expiration_year'>
           <%= (Date.today.year..(Date.today.year + 15)).map {|n| 
-            selected = @params['credit_card_expiration_year'] == n.to_s ? " selected='selected'" : nil
+            selected = credit_card.year == n.to_s ? " selected='selected'" : nil
             "<option value='#{n}'#{ selected }>#{n}</option>" } 
           %>
         </select>
@@ -72,14 +70,14 @@
       <div class='group'>
         <% %w( name address1 city ).each do |field| %>
           <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= billing_address[field] %>' />
         <% end %>
       </div>
 
       <div class='group'>
         <% %w( state country zip ).each do |field| %>
           <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
+          <input type='text' id='billing_address_<%= field %>' name='billing_address_<%= field %>' value='<%= billing_address[field] %>' />
         <% end %>
       </div>
     </fieldset>
