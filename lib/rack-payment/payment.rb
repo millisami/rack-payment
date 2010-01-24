@@ -225,8 +225,12 @@ module Rack #:nodoc:
           # if the YAML loaded something and it's a Hash
           if options and options.is_a?(Hash)
 
-            # handle RACK_ENV so you can put your test/development/etc in the same file
-            options = options[ENV['RACK_ENV']] if ENV['RACK_ENV'] and options[ENV['RACK_ENV']].is_a?(Hash)
+            # handle RACK_ENV / RAILS_ENV so you can put your test/development/etc in the same file
+            if ENV['RACK_ENV'] and options[ENV['RACK_ENV']].is_a?(Hash)
+              options = options[ENV['RACK_ENV']]
+            elsif ENV['RAILS_ENV'] and options[ENV['RAILS_ENV']].is_a?(Hash)
+              options = options[ENV['RAILS_ENV']]
+            end
 
             return options
           end

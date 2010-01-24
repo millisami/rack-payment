@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe Rack::Payment, 'configuration' do
 
+  after do
+    ENV["RACK_ENV"] = 'test' # just incase we mess it up
+  end
+
   def can_get_and_set_attribute name, default = nil, value = '/foo'
     name = name.to_s.to_sym
 
@@ -95,6 +99,27 @@ describe Rack::Payment, 'configuration' do
     ENV["RACK_ENV"] = 'test'
     Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
     Rack::Payment.new(@app).gateway_options[:foo].should == 'bar'
+  end
+
+  it 'supports yml configuration files with environments (if ENV["RAILS_ENV"] is set and it matches one of the keys)' do
+    ENV["RACK_ENV"] = nil # because we look for RACK_ENV first
+
+    tmpfile = Tempfile.new 'yaml-file1'
+    tmpfile.print({ 'test' => { :gateway => :bogus, :foo => 'bar' }, 'test2' => { :gateway => :bogus, :foo => 'HI' }}.to_yaml)
+    tmpfile.close
+    Rack::Payment.yml_file_names = [tmpfile.path]
+
+    lambda { Rack::Payment.new(@app) }.should raise_error(/valid gateway/i)
+
+    ENV["RAILS_ENV"] = 'test'
+    Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
+    Rack::Payment.new(@app).gateway_options[:foo].should == 'bar'
+
+    ENV["RACK_ENV"] = 'test2'
+    Rack::Payment.new(@app).gateway.should be_a(ActiveMerchant::Billing::BogusGateway)
+    Rack::Payment.new(@app).gateway_options[:foo].should == 'HI' # RACK_ENV takes precedence
+
+    ENV["RACK_ENV"] = 'test'
   end
 
   it 'can take a hash where the gateway type is passed as :gateway (for easy YML loading)' do
