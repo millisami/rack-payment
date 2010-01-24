@@ -29,9 +29,8 @@ describe Rack::Payment, 'configuration' do
   end
 
   it 'requires a valid Rack application (that responds to #call)' do
-    lambda { Rack::Payment.new }.should raise_error(ArgumentError, /wrong number of arguments/)
-    lambda { Rack::Payment.new nil, :gateway => :bogus }.should raise_error(ArgumentError, /valid rack app/i)
-
+    # if you pass nil, we assume that there is no rack app
+    lambda { Rack::Payment.new 'something invalid besides nil', :gateway => :bogus }.should raise_error(ArgumentError, /valid rack app/i)
     Rack::Payment.new(@app, 'gateway' => :bogus).app.should == @app
   end
 

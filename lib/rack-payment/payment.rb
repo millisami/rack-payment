@@ -164,7 +164,7 @@ module Rack #:nodoc:
     #   @param [#call] The Rack application for this middleware
     #   @param [Hash] Options for the gateway and for Rack::Payment
     #
-    def initialize rack_application, options = nil
+    def initialize rack_application = nil, options = nil
       options ||= {}
       options = look_for_options_in_a_yml_file.merge(options) unless options['yml_config'] == false or options[:yml_config] == false
       raise ArgumentError, "You must pass options (or put them in a yml file)." if options.empty?
@@ -173,7 +173,7 @@ module Rack #:nodoc:
       @gateway_options = options             # <---- need to remove *our* options from the gateway options!
       @gateway_type    = options['gateway'] || options[:gateway]
 
-      raise ArgumentError, 'You must pass a valid Rack application' unless rack_application.respond_to?(:call)
+      raise ArgumentError, 'You must pass a valid Rack application' unless @app.nil? or @app.respond_to?(:call)
       raise ArgumentError, 'You must pass a valid Gateway'          unless @gateway_type and gateway.is_a?(ActiveMerchant::Billing::Gateway)
 
       DEFAULT_OPTIONS.each do |name, value|
@@ -192,6 +192,7 @@ module Rack #:nodoc:
     # The main Rack #call method required by every Rack application / middleware.
     # @param [Hash] The Rack Request environment variables
     def call env
+      raise "Rack::Payment was not initialized with a Rack application and cannot be #call'd" unless @app
       env[env_instance_variable] ||= self   # make this instance available
       return Request.new(env, self).finish  # a Request object actually returns the response
     end
@@ -216,6 +217,14 @@ module Rack #:nodoc:
       end
 
       return {}
+    end
+
+    # Returns a new {Rack::Payment::Helper} instance which can be 
+    # used to fire off single payments (without needing to make 
+    # web requests).
+    # @return [Rack::Payment::Helper]
+    def payment
+      Rack::Payment::Helper.new(self)
     end
 
   end

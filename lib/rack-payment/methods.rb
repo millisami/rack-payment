@@ -15,7 +15,8 @@ module Rack     #:nodoc:
       # If you override the {Rack::Payment#env_instance_variable}, you will need to 
       # pass that string as an option to {#rack_payment}
       def payment env_instance_variable = Rack::Payment::DEFAULT_OPTIONS['env_instance_variable']
-        _request_env[ rack_payment(env_instance_variable).env_helper_variable ] ||= Rack::Payment::Helper.new
+        rack_payment_instance = rack_payment(env_instance_variable)
+        _request_env[ rack_payment_instance.env_helper_variable ] ||= Rack::Payment::Helper.new(rack_payment_instance)
       end
 
       # Returns the instance of {Rack::Payment} your application is using.

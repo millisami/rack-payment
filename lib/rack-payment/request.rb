@@ -53,7 +53,7 @@ module Rack     #:nodoc:
       end
 
       def payment
-        env[env_helper_variable] ||= Rack::Payment::Helper.new
+        env[env_helper_variable] ||= Rack::Payment::Helper.new(payment_instance)
       end
 
       def session
@@ -136,38 +136,11 @@ module Rack     #:nodoc:
           end 
         end
 
-        # Check for Credit Card errors
-        errors = payment.credit_card.errors
-
-        # Try to #authorize (if no errors so far)
-        if errors.empty?
-          begin
-            payment.raw_authorize_response = gateway.authorize payment.amount_in_cents, 
-                                                           payment.credit_card.active_merchant_card, 
-                                                           :ip => request.ip
-            errors << payment.raw_authorize_response.message unless payment.raw_authorize_response.success?
-          rescue ActiveMerchant::Billing::Error => error
-            payment.raw_authorize_response = OpenStruct.new :success? => false, :message => error.message
-            errors << error.message
-          end
-        end
-
-        # Try to #capture (if no errors so far)
-        if errors.empty?
-          begin
-            payment.raw_capture_response = gateway.capture payment.amount_in_cents, payment.raw_authorize_response.authorization
-            errors << payment.raw_capture_response.message unless payment.raw_capture_response.success?
-          rescue ActiveMerchant::Billing::Error => error
-            payment.raw_capture_response = OpenStruct.new :success? => false, :message => error.message
-            errors << payment.raw_capture_response.message
-          end
-        end
-
-        # RENDER
-        if errors.empty?
+        # Purchase!
+        if payment.purchase(:ip => request.ip)
           render_on_success
         else
-          render_on_error errors
+          render_on_error payment.errors
         end
       end
 

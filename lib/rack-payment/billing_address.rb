@@ -19,6 +19,11 @@ module Rack     #:nodoc:
 
         return false
       end
+
+      # Aliases
+
+      def street()       address1              end
+      def street=(value) self.address1=(value) end
     end
 
   end
