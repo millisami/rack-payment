@@ -24,6 +24,14 @@ module Rack #:nodoc:
       #
       # @return [Array(String)]
       attr_accessor :yml_file_names
+
+      # A standard logger.  Defaults to nil.  We assume that this has 
+      # methods like #info that accept a String or a block.
+      #
+      # If this is set, new instances of Rack::Payment will use this logger by default.
+      #
+      # @return [Logger]
+      attr_accessor :logger
     end
 
     @yml_file_names = YML_FILE_NAMES
@@ -49,6 +57,15 @@ module Rack #:nodoc:
     # The {Rack} application that this middleware was instantiated with
     # @return [#call]
     attr_accessor :app
+
+    # A standard logger.  Defaults to nil.  We assume that this has 
+    # methods like #info that accept a String or a block
+    # @return [Logger]
+    attr_accessor :logger
+
+    def logger #:nodoc:
+      @logger ||= Rack::Payment.logger
+    end
 
     # When a payment is successful, we redirect to this path, if set.
     # If this is `nil`, we display our own confirmation page.

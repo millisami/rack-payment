@@ -66,6 +66,7 @@ describe 'Single Purchase (without web app)' do
     payment = Rack::Payment.new.payment
     payment.credit_card.update :first_name => 'remi', :number => TEST_HELPER.cc_number.invalid, # removed last name
                                :cvv => '123', :year => '2015', :month => '01', :type => 'visa'
+    payment.amount = 15.95
 
     payment.purchase(:ip => '127.0.0.1').should be_false
     payment.errors.join(', ').should include('last_name')

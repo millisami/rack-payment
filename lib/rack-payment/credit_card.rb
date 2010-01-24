@@ -55,6 +55,10 @@ module Rack     #:nodoc:
         active_merchant_card.type
       end
 
+      def full_name
+        [ first_name, last_name ].compact.join(' ')
+      end
+
       def errors
         REQUIRED.inject([]) do |errors, required_attribute_name|
           value = send required_attribute_name

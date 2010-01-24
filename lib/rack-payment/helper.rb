@@ -21,7 +21,7 @@ module Rack     #:nodoc:
                                 :raw_capture_response,   :raw_capture_response=, 
                                 :raw_express_response,   :raw_express_response=
 
-      def_delegators :rack_payment, :gateway, :built_in_form_path
+      def_delegators :rack_payment, :gateway, :built_in_form_path, :logger, :logger=
 
       attr_accessor :rack_payment, :amount, :credit_card, :billing_address, :errors, :use_express, :response
 
@@ -88,11 +88,41 @@ module Rack     #:nodoc:
         end
       end
 
+      # Move these out into a module or something?
+
+      def log_purchase_start transaction_id, options
+        logger.debug { "[#{transaction_id}] #purchase(#{options.inspect}) for amount_in_cents: #{ amount_in_cents.inspect }" } if logger
+      end
+
+      def log_invalid_credit_card transaction_id
+        logger.warn { "[#{transaction_id}] invalid credit card: #{ errors.inspect }" } if logger
+      end
+
+      def log_authorize_successful transaction_id, options
+        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was successful" }
+      end
+
+      def log_authorize_unsuccessful transaction_id, options
+        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was unsuccessful: #{ errors.inspect }" }
+      end
+
+      def log_capture_successful transaction_id
+          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was successful" }
+      end
+
+      def log_capture_unsuccessful transaction_id
+          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was unsuccessful: #{ errors.inspect }" }
+      end
+
       # Fires off a purchase!
       #
       # This resets #errors and #response
       #
       def purchase options
+        transaction_id = DateTime.now.strftime('%Y-%m-%d %H:%M:%S %L') # %L to include milliseconds
+        log_purchase_start(transaction_id, options)
+
+        raise "#amount_in_cents must be greater than 0" unless amount_in_cents.to_i > 0
         raise ArgumentError, "The :ip option is required when calling #purchase" unless options and options[:ip]
 
         # Check for Credit Card errors
@@ -106,23 +136,36 @@ module Rack     #:nodoc:
             #      fields: name, address1, city, state, country, zip.
             #      Some gateways (eg. PayPal Pro) require a billing_address!
             self.raw_authorize_response = gateway.authorize amount_in_cents, credit_card.active_merchant_card, :ip => options[:ip]
-            errors << raw_authorize_response.message unless raw_authorize_response.success?
+            unless raw_authorize_response.success?
+              errors << raw_authorize_response.message
+              log_authorize_unsuccessful(transaction_id, options)
+            end
           rescue ActiveMerchant::Billing::Error => error
-            self.raw_authorize_response = OpenStruct.new :success? => false, :message => error.message
+            self.raw_authorize_response = OpenStruct.new :success? => false, :message => error.message, :authorization => nil
             errors << error.message
+            log_authorize_unsuccessful(transaction_id, options)
           end
+        else
+          log_invalid_credit_card(transaction_id)
         end
 
         # Try to #capture (if no errors so far)
         if errors.empty?
+          log_authorize_successful(transaction_id, options)
           begin
             self.raw_capture_response = gateway.capture amount_in_cents, raw_authorize_response.authorization
-            errors << raw_capture_response.message unless raw_capture_response.success?
+            unless raw_capture_response.success?
+              errors << raw_capture_response.message
+              log_capture_unsuccessful(transaction_id)
+            end
           rescue ActiveMerchant::Billing::Error => error
             self.raw_capture_response = OpenStruct.new :success? => false, :message => error.message
             errors << raw_capture_response.message
+            log_capture_unsuccessful(transaction_id)
           end
         end
+
+        log_capture_successful(transaction_id) if errors.empty?
 
         return errors.empty?
       end
