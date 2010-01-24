@@ -99,19 +99,19 @@ module Rack     #:nodoc:
       end
 
       def log_authorize_successful transaction_id, options
-        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was successful" }
+        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was successful" } if logger
       end
 
       def log_authorize_unsuccessful transaction_id, options
-        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was unsuccessful: #{ errors.inspect }" }
+        logger.debug { "[#{transaction_id}] #authorize(#{amount_in_cents.inspect}, <CreditCard for #{ credit_card.full_name.inspect }>, :ip => #{ options[:ip].inspect }) was unsuccessful: #{ errors.inspect }" } if logger
       end
 
       def log_capture_successful transaction_id
-          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was successful" }
+          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was successful" } if logger
       end
 
       def log_capture_unsuccessful transaction_id
-          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was unsuccessful: #{ errors.inspect }" }
+          logger.debug { "[#{transaction_id}] #capture(#{amount_in_cents}, #{raw_authorize_response.authorization.inspect}) was unsuccessful: #{ errors.inspect }" } if logger
       end
 
       # Fires off a purchase!
