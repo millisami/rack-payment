@@ -18,10 +18,11 @@ describe Rack::Payment, 'overriding UI' do
     last_response.should contain('failure')
 
     fill_in :credit_card_number, :with => '1' # <--- valid number
+    fill_in :credit_card_type, :with => 'visa'
     click_button 'Purchase'
 
     last_response.should_not contain('Order successful')
-    last_response.should contain('w00t!  Success!')
+
     last_response.should contain('9.95 (995)')
     last_response.body.should include('@params={"authorized_amount"=>"995"}') # part of authorization response
     last_response.body.should include('@params={"paid_amount"=>"995"}')       # part of capture response
