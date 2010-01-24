@@ -1,6 +1,8 @@
 div.rack-payment {
+  padding:    0;
   margin:     2em;
   text-align: center;
+  width:      100%;
 }
 
 div.rack-payment div.errors {
@@ -18,10 +20,20 @@ div.rack-payment ul.errors {
   list-style-type: none;
 }
 
+/*
+   the first one shouldn't have a margin, or else the margins will overlap.  we want:
+                               4% [ 44% ] 4% [ 44% ] 4%
+*/
+div.rack-payment fieldset:first-child {
+  margin-right: 0;
+}
+
 div.rack-payment fieldset {
-  width:                 41%;
-  margin-left:           2%;
-  margin-right:          2%;
+  padding:               1%;
+  margin:                0;
+  width:                 41%; /* should really be 42, i think ... but it works */
+  margin-left:           4%;
+  margin-right:          4%;
   float:                 left;
   text-align:            left;
   -moz-border-radius:    1em;
@@ -35,9 +47,14 @@ div.rack-payment fieldset legend {
 }
 
 div.rack-payment fieldset .group {
-  float: left;
-  width: 45%;
-  margin-right: 1em;
+  float:        left;
+  width:        48%;
+  margin-right: 2%;
+}
+
+div.rack-payment form {
+  padding: 0;
+  margin:  0;
 }
 
 div.rack-payment form label {
@@ -51,5 +68,5 @@ div.rack-payment form input[type=submit] {
 
 div.rack-payment #complete_purchase {
   padding-top: 1em;
-  clear: left;
+  clear:       left;
 }

@@ -80,7 +80,7 @@ Order successful.
         = field.gsub('_', ' ').capitalize
         %input{ :type => 'text', :name => full_field, :value => payment.billing_address[field] }
   
-  %input{ :type => 'submit', :value => 'Purchase' }
+  %input{ :type => 'submit', :value => 'Complete Purchase' }
 
 @@ layout
 

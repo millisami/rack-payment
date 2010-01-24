@@ -12,14 +12,14 @@ describe Rack::Payment, 'overriding UI' do
 
     fill_in_invalid_credit_card
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should_not contain('Order successful')
     last_response.should contain('failure')
 
     fill_in :credit_card_number, :with => '1' # <--- valid number
     fill_in :credit_card_type, :with => 'visa'
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should_not contain('Order successful')
 
@@ -54,7 +54,7 @@ describe Rack::Payment, 'overriding UI' do
       :zip      => '12345'
     }.each { |key, value| fill_in "address[#{key}]", :with => value.to_s }
 
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('Order successful')
     last_response.should contain('15.95')
@@ -80,7 +80,7 @@ describe Rack::Payment, 'overriding UI' do
 
     # we forgot the cvv and didn't fill out the address
 
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('payment.amount: 15.95')
     last_response.should contain('payment.amount_paid: nil')
@@ -89,7 +89,7 @@ describe Rack::Payment, 'overriding UI' do
     last_response.should contain('Custom Page')
 
     fill_in 'credit_card[number]', :with => '1' # <--- valid number
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('Order successful') # regular old order successful page
     last_response.should contain('15.95')
@@ -98,26 +98,25 @@ describe Rack::Payment, 'overriding UI' do
   end
 
   it 'should be able to use your own layout and spit out the html for the form inside it' do
-    pending 'want to update the fields to use foo[bar] first'
     set_rack_app SimpleAppWithOwnLayout.new
 
     visit '/?amount=1.50'
     last_response.should contain('Here be my form!') # custom text
     fill_in_invalid_credit_card
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
-    last_response.should contain('payment.amount: 1.50')
+    last_response.should contain('payment.amount: 1.5')
     last_response.should contain('payment.amount_paid: nil')
     last_response.should_not contain('Order successful')
     last_response.should contain('failure')
     last_response.should contain('Custom Page')
 
     fill_in_valid_credit_card
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('Order successful') # regular old order successful page
-    last_response.should contain('payment.amount: 1.50')
-    last_response.should contain('payment.amount_paid: 1.50')
+    last_response.should contain('payment.amount: 1.5')
+    last_response.should contain('payment.amount_paid: 1.5')
   end
 
   it 'should be able to specify a different page to go to on_error (which can display the error message(s))'

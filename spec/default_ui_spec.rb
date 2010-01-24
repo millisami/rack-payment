@@ -19,7 +19,7 @@ describe Rack::Payment, 'default UI' do
   it 'can make a purchase' do
     fill_in_valid_credit_card
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('Order successful')
     last_response.should contain('9.95')
@@ -28,7 +28,7 @@ describe Rack::Payment, 'default UI' do
   it 'errors are displayed if not all required fields are filled out [and we can fix it]' do
     fill_in_valid_credit_card :first_name => nil
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should     contain('first_name is required')
     last_response.should_not contain('Order successful')
@@ -42,7 +42,7 @@ describe Rack::Payment, 'default UI' do
     fill_in :credit_card_type, :with => 'visa' # because Webrat is hating on me
     fill_in :credit_card_first_name, :with => 'remi'
     fill_in :credit_card_type,   :with => 'visa'
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should     contain('Order successful')
     last_response.should     contain('9.95')
@@ -52,7 +52,7 @@ describe Rack::Payment, 'default UI' do
   it 'errors are displayed if credit card is invalid [and we can fix it]' do
     fill_in_invalid_credit_card
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should     contain('failure')
     last_response.should_not contain('Order successful')
@@ -64,7 +64,7 @@ describe Rack::Payment, 'default UI' do
 
     fill_in :credit_card_number, :with => TEST_HELPER.cc_number.valid
     fill_in :credit_card_type,   :with => 'visa'
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should     contain('Order successful')
     last_response.should     contain('9.95')
@@ -78,7 +78,7 @@ describe Rack::Payment, 'default UI' do
 
     fill_in_valid_credit_card
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should_not contain('Order successful')
     last_response.should     contain('Bogus Gateway: Forced failure')
@@ -87,14 +87,14 @@ describe Rack::Payment, 'default UI' do
   it 'should handle when #authorize raises exception [and we can fix it]' do
     fill_in_valid_credit_card :number => TEST_HELPER.cc_number.boom
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should_not contain('Order successful')
     last_response.should     contain('Bogus Gateway: Use CreditCard number 1 for success')
 
     fill_in :credit_card_number, :with => TEST_HELPER.cc_number.valid
     fill_in :credit_card_type,   :with => 'visa'
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should     contain('Order successful')
     last_response.should     contain('9.95')

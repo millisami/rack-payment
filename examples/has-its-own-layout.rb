@@ -18,14 +18,14 @@ class SimpleAppWithOwnLayout < Sinatra::Base
   end
 
   get '/' do
-    payment.amount = params[:amount].to_f
+    payment.amount = params[:amount]
     haml :index
   end
 
   post '/' do
-    payment.amount = params[:monies]
+    payment.amount = params[:amount]
     payment.credit_card.update     params[:credit_card]
-    payment.billing_address.update params[:address]
+    payment.billing_address.update params[:billing_address]
 
     [ 402, {}, ['Payment Required'] ] # will re-render the GET if invalid (?)
   end

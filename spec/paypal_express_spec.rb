@@ -14,7 +14,7 @@ describe Rack::Payment, 'PayPal Express' do
 
     fill_in_valid_credit_card
     fill_in_valid_billing_address
-    click_button 'Purchase'
+    click_button 'Complete Purchase'
 
     last_response.should contain('Order successful')
     last_response.should contain('9.95')
