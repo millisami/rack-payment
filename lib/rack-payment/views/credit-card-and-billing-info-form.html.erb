@@ -1,3 +1,9 @@
+<!-- 
+  TODO use helper for select options for credit card type
+  TODO use helper for select options for expiration
+  TODO try getting rid of the rack.payment field
+-->
+
 <div class='rack-payment'>
 
   <h1>Credit Card and Billing Info</h1>
@@ -14,29 +20,49 @@
   <% end %>
 
   <form action='<%= @this.built_in_form_path %>' method='post'>
-
-    <!-- required?  try getting rid of it -->
     <input type='hidden' name='rack.payment' value='true' />
 
     <fieldset>
       <legend>Credit Card</legend>
 
       <div class='group'>
-      <% %w( first_name last_name number type ).each do |field| %>
-        <label>
-          <%= field.gsub('_', ' ').capitalize %>
-          <input type='text' name='credit_card_<%= field %>' value='<%= @params["credit_card_#{ field }"] %>' />
-        </label>
-      <% end %>
+        <label for='credit_card_first_name'>First Name</label>
+        <input autofocus='true' type='text' name='credit_card_first_name' value='<%= @params['credit_card_first_name'] %>' />
+
+        <label for='credit_card_last_name'>Last Name</label>
+        <input type='text' name='credit_card_last_name' value='<%= @params['credit_card_last_name'] %>' />
+
+        <label for='credit_card_number'>Card Number</label>
+        <input type='text' name='credit_card_number' value='<%= @params['credit_card_number'] %>' />
       </div>
 
       <div class='group'>
-      <% %w( cvv expiration_month expiration_year ).each do |field| %>
-        <label>
-          <%= field.gsub('_', ' ').capitalize %>
-          <input type='text' name='credit_card_<%= field %>' value='<%= @params["credit_card_#{ field }"] %>' />
-        </label>
-      <% end %>
+        <label for='credit_card_type'>Card Type</label>
+        <select id='credit_card_type' name='credit_card_type' />
+          <%= [ ['visa', 'Visa'], ['master', 'MasterCard'], ['american_express', 'American Express'], ['discover', 'Discover'] ].
+            map {|value, name| 
+              selected = @params['credit_card_type'] == value ? " selected='selected'" : nil
+              "<option value='#{ value }'#{ selected }'>#{ name }</option>" }
+          %>
+        </select>
+
+        <label for='credit_card_cvv'>CVV</label>
+        <input type='text' name='credit_card_cvv' value='<%= @params['credit_card_cvv'] %>' />
+
+        <label for='credit_card_expiration_month'>Expiration</label>
+        <select id='credit_card_expiration_month' name='credit_card_expiration_month'>
+          <%= %w( 01 02 03 04 05 06 07 08 09 10 11 12 ).map {|n| 
+            selected = @params['credit_card_expiration_month'] == n ? " selected='selected'" : nil
+            "<option value='#{n}'#{ selected }>#{n}</option>" } 
+          %>
+        </select>
+        <select id='credit_card_expiration_year' name='credit_card_expiration_year'>
+          <%= (Date.today.year..(Date.today.year + 15)).map {|n| 
+            selected = @params['credit_card_expiration_year'] == n.to_s ? " selected='selected'" : nil
+            "<option value='#{n}'#{ selected }>#{n}</option>" } 
+          %>
+        </select>
+
       </div>
     </fieldset>
 
@@ -44,25 +70,24 @@
       <legend>Billing Address</legend>
 
       <div class='group'>
-      <% %w( name address1 city ).each do |field| %>
-        <label>
-          <%= field.gsub('_', ' ').capitalize %>
+        <% %w( name address1 city ).each do |field| %>
+          <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
           <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
-        </label>
-      <% end %>
+        <% end %>
       </div>
 
       <div class='group'>
-      <% %w( state country zip ).each do |field| %>
-        <label>
-          <%= field.gsub('_', ' ').capitalize %>
+        <% %w( state country zip ).each do |field| %>
+          <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
           <input type='text' name='billing_address_<%= field %>' value='<%= @params["billing_address_#{ field }"] %>' />
-        </label>
-      <% end %>
+        <% end %>
       </div>
     </fieldset>
 
-    <input type='submit' value='Purchase' />
+    <div id='complete_purchase'>
+      <p>Ready to complete your purchase?</p>
+      <input type='submit' value='Purchase' />
+    </div>
 
   </form>
 

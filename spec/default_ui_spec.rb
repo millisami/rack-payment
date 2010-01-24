@@ -39,7 +39,9 @@ describe Rack::Payment, 'default UI' do
       with(995, anything, :ip => '127.0.0.1').
       and_return {|*args| a_gateway.authorize(*args) }
 
+    fill_in :credit_card_type, :with => 'visa' # because Webrat is hating on me
     fill_in :credit_card_first_name, :with => 'remi'
+    fill_in :credit_card_type,   :with => 'visa'
     click_button 'Purchase'
 
     last_response.should     contain('Order successful')
@@ -61,6 +63,7 @@ describe Rack::Payment, 'default UI' do
       and_return { a_gateway.capture(995, "success") }
 
     fill_in :credit_card_number, :with => TEST_HELPER.cc_number.valid
+    fill_in :credit_card_type,   :with => 'visa'
     click_button 'Purchase'
 
     last_response.should     contain('Order successful')
@@ -90,6 +93,7 @@ describe Rack::Payment, 'default UI' do
     last_response.should     contain('Bogus Gateway: Use CreditCard number 1 for success')
 
     fill_in :credit_card_number, :with => TEST_HELPER.cc_number.valid
+    fill_in :credit_card_type,   :with => 'visa'
     click_button 'Purchase'
 
     last_response.should     contain('Order successful')

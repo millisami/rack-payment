@@ -37,10 +37,12 @@ def fill_in_credit_card fields = {}
     :last_name        => 'taylor',
     :number           => '1',     # 1 is valid using the BogusGateway
     :cvv              => '123',
-    :expiration_month => '01',
-    :expiration_year  => '2015',
-    :type             => 'visa'
   }.merge(fields).each { |key, value| fill_in "credit_card_#{key}", :with => value.to_s }
+
+  select '01',   :from => :credit_card_expiration_month
+  select '2015', :from => :credit_card_expiration_year
+  # select 'Visa', :from => 'credit_card_type' # <-- this fucking HATES me and refuses to work!
+  fill_in :credit_card_type, :with => 'visa'
 end
 
 def fill_in_valid_billing_address
