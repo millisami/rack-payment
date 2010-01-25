@@ -3,6 +3,7 @@ require File.dirname(__FILE__) + '/spec_helper'
 describe Rack::Payment, 'configuration' do
 
   after do
+    ActiveMerchant::Billing::Base.mode = :test
     ENV["RACK_ENV"] = 'test' # just incase we mess it up
   end
 
@@ -159,5 +160,22 @@ describe Rack::Payment, 'configuration' do
   end
 
   it 'can set the path to the view to be rendered (credit card & billing info)'
+
+  it 'can configure what the ActiveMerchant::Billing::Base.mode is set to via test_mode = true/false' do
+    # individual gateways don't seem to have a mode, so we have to change it globally
+
+    Rack::Payment.new(nil, :gateway => 'bogus', :test_mode => false)
+    ActiveMerchant::Billing::Base.mode.should == :production
+
+    Rack::Payment.new(nil, :gateway => 'bogus', :test_mode => true )
+    ActiveMerchant::Billing::Base.mode.should == :test
+
+    Rack::Payment.new(nil, :gateway => 'bogus', :test_mode => false)
+    ActiveMerchant::Billing::Base.mode.should == :production
+
+    # by default, if you don't pass a mode, it doesn't change the mode
+    Rack::Payment.new(nil, :gateway => 'bogus' )
+    ActiveMerchant::Billing::Base.mode.should == :production
+  end
 
 end

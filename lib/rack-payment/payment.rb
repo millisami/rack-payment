@@ -181,17 +181,22 @@ module Rack #:nodoc:
     #   @param [#call] The Rack application for this middleware
     #   @param [Hash] Options for the gateway and for Rack::Payment
     #
-    def initialize rack_application = nil, options = nil
+    def initialize rack_app = nil, options = nil
       options ||= {}
       options = look_for_options_in_a_yml_file.merge(options) unless options['yml_config'] == false or options[:yml_config] == false
       raise ArgumentError, "You must pass options (or put them in a yml file)." if options.empty?
+      raise ArgumentError, 'You must pass a valid Rack application' unless rack_app.nil? or rack_app.respond_to?(:call)
 
-      @app             = rack_application
-      @gateway_options = options             # <---- need to remove *our* options from the gateway options!
+      @app             = rack_app
+      @gateway_options = options
       @gateway_type    = options['gateway'] || options[:gateway]
 
-      raise ArgumentError, 'You must pass a valid Rack application' unless @app.nil? or @app.respond_to?(:call)
-      raise ArgumentError, 'You must pass a valid Gateway'          unless @gateway_type and gateway.is_a?(ActiveMerchant::Billing::Gateway)
+      # Before trying to instantiate a gateway using these options, let's remove *our* options so we 
+      # don't end up passing them to the gateway's constructor, possibly blowing it up!
+
+      @test_mode = @gateway_options.delete(:test_mode)  if @gateway_options.keys.include?(:test_mode)
+      @test_mode = @gateway_options.delete('test_mode') if @gateway_options.keys.include?('test_mode')
+      ActiveMerchant::Billing::Base.mode = (@test_mode == false) ? :production : :test unless @test_mode.nil?
 
       DEFAULT_OPTIONS.each do |name, value|
         # set the default
@@ -204,6 +209,9 @@ module Rack #:nodoc:
           send "#{name.to_s.to_sym}=", @gateway_options.delete(name.to_s.to_sym)
         end
       end
+
+      # Now we check to see if the gateway is OK
+      raise ArgumentError, 'You must pass a valid Gateway'          unless @gateway_type and gateway.is_a?(ActiveMerchant::Billing::Gateway)
     end
 
     # The main Rack #call method required by every Rack application / middleware.
