@@ -214,7 +214,7 @@ module Rack     #:nodoc:
           if selected and selected.to_s == value.to_s
             "<option value='#{ value }' selected='selected'>#{ name }</option>"
           else
-            "<options value='#{ value }'>#{ name }</option>"
+            "<option value='#{ value }'>#{ name }</option>"
           end
         }.join
       end
