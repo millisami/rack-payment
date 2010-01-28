@@ -175,12 +175,15 @@ module Rack     #:nodoc:
       # By default, the form will POST to the current URL (action='')
       #
       # You can pass a different URL for the form action
-      def form post_to = ''
-        css  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
+      def form post_to = '', options = nil
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
+        html = ''
 
-        html = "<style type='text/css'>\n#{ ::File.read(css) }\n</style>"
+        if options and options[:inline_css]
+          html << "<style type='text/css'>\n#{ options[:inline_css] }\n</style>"
+        end
+
         html << ERB.new(erb).result(binding)
       end
 

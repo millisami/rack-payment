@@ -202,7 +202,8 @@ module Rack     #:nodoc:
       end
 
       def credit_card_and_billing_info_response
-        form_html = payment.form built_in_form_path
+        css_file  = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.css'
+        form_html = payment.form built_in_form_path, :inline_css => ::File.read(css_file)
         layout    = ::File.dirname(__FILE__) + '/views/layout.html'
         html      = ::File.read(layout)
         html      = html.sub 'CONTENT', form_html

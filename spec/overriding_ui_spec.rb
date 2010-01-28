@@ -119,6 +119,14 @@ describe Rack::Payment, 'overriding UI' do
     last_response.should contain('payment.amount_paid: 1.5')
   end
 
+  it 'should not add any in-line css' do
+    set_rack_app SimpleAppWithOwnLayout.new
+
+    visit '/?amount=1.50'
+
+    last_response.body.should_not include('<style')
+  end
+
   it 'should be able to specify a different page to go to on_error (which can display the error message(s))'
 
 end
