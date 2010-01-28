@@ -135,7 +135,7 @@ module Rack     #:nodoc:
             # TODO should pass :billing_address, if the billing address isn't empty.
             #      fields: name, address1, city, state, country, zip.
             #      Some gateways (eg. PayPal Pro) require a billing_address!
-            self.raw_authorize_response = gateway.authorize amount_in_cents, credit_card.active_merchant_card, :ip => options[:ip]
+            self.raw_authorize_response = gateway.authorize amount_in_cents, credit_card.active_merchant_card, :ip => options[:ip], :billing_address => billing_address.active_merchant_hash
             unless raw_authorize_response.success?
               errors << raw_authorize_response.message
               log_authorize_unsuccessful(transaction_id, options)

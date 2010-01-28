@@ -36,7 +36,7 @@ describe Rack::Payment, 'default UI' do
     # Make sure #authorize is called with the right arguments (we return what it normally would)
     a_gateway = ActiveMerchant::Billing::BogusGateway.new
     SimpleApp.gateway.should_receive(:authorize).
-      with(995, anything, :ip => '127.0.0.1').
+      with(995, anything, :ip => '127.0.0.1', :billing_address => billing_address_hash).
       and_return {|*args| a_gateway.authorize(*args) }
 
     fill_in :credit_card_type, :with => 'visa' # because Webrat is hating on me
@@ -73,7 +73,7 @@ describe Rack::Payment, 'default UI' do
 
   it 'errors are displayed if #capture raises exception' do
     authorize_response = OpenStruct.new :success? => true, :authorization => TEST_HELPER.auth.boom
-    SimpleApp.gateway.should_receive(:authorize).with(995, anything, :ip => '127.0.0.1').
+    SimpleApp.gateway.should_receive(:authorize).with(995, anything, :ip => '127.0.0.1', :billing_address => billing_address_hash).
       and_return(authorize_response)
 
     fill_in_valid_credit_card

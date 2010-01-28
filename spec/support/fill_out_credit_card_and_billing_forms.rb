@@ -45,7 +45,7 @@ def fill_in_credit_card fields = {}
   fill_in :credit_card_type, :with => 'visa'
 end
 
-def fill_in_valid_billing_address
+def billing_address_hash
   { 
     :name     => 'remi',
     :address1 => '123 Chunky Bacon St.',
@@ -53,5 +53,9 @@ def fill_in_valid_billing_address
     :state    => 'NY',
     :country  => 'US',
     :zip      => '12345'
-  }.each { |key, value| fill_in "billing_address_#{key}", :with => value.to_s }
+  }
+end
+
+def fill_in_valid_billing_address
+  billing_address_hash.each { |key, value| fill_in "billing_address_#{key}", :with => value.to_s }
 end
