@@ -212,7 +212,7 @@ module Rack     #:nodoc:
           ['discover', 'Discover'] ].map { |value, name|
         
           if selected and selected.to_s == value.to_s
-            "<options value='#{ value }' selected='selected'>#{ name }</option>"
+            "<option value='#{ value }' selected='selected'>#{ name }</option>"
           else
             "<options value='#{ value }'>#{ name }</option>"
           end

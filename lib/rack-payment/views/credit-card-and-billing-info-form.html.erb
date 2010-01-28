@@ -35,11 +35,6 @@
         <label for='credit_card_type'>Card Type</label>
         <select id='credit_card_type' name='credit_card[type]' />
           <%= options_for_credit_card_type credit_card.type %>
-          <%= [ ['visa', 'Visa'], ['master', 'MasterCard'], ['american_express', 'American Express'], ['discover', 'Discover'] ].
-            map {|value, name| 
-              selected = credit_card.type == value ? " selected='selected'" : nil
-              "<option value='#{ value }'#{ selected }'>#{ name }</option>" }
-          %>
         </select>
 
         <label for='credit_card_cvv'>CVV</label>
