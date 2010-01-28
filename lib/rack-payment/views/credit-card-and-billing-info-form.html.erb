@@ -60,15 +60,19 @@
       <legend>Billing Address</legend>
 
       <div class='group'>
-        <% %w( name address1 city ).each do |field| %>
-          <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' id='billing_address_<%= field %>' name='billing_address[<%= field %>]' value='<%= billing_address[field] %>' />
-        <% end %>
+        <label for='billing_address_name'>Full Name</label>
+        <input type='text' id='billing_address_name' name='billing_address[name]' value='<%= billing_address.name %>' />
+
+        <label for='billing_address_address1'>Address</label>
+        <input type='text' id='billing_address_address1' name='billing_address[address1]' value='<%= billing_address.address1 %>' />
+
+        <label for='billing_address_city'>City</label>
+        <input type='text' id='billing_address_city' name='billing_address[city]' value='<%= billing_address.city %>' />
       </div>
 
       <div class='group'>
         <% %w( state country zip ).each do |field| %>
-          <label for='credit_card_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
+          <label for='billing_address_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
           <input type='text' id='billing_address_<%= field %>' name='billing_address[<%= field %>]' value='<%= billing_address[field] %>' />
         <% end %>
       </div>

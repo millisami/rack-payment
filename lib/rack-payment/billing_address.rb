@@ -30,6 +30,9 @@ module Rack     #:nodoc:
       def street()       address1              end
       def street=(value) self.address1=(value) end
 
+      def address()       address1              end
+      def address=(value) self.address1=(value) end
+
       # Returns a hash that can be passed to a Gateway#authorize call
       def active_merchant_hash
         { 

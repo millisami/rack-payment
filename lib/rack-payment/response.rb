@@ -26,7 +26,13 @@ module Rack     #:nodoc:
           if express?
             express_amound_paid
           else
-            (raw_capture_response.params['paid_amount'].to_f / 100)
+
+            if raw_capture_response.params['paid_amount']     # Sometimes we get this (like 995)
+              (raw_capture_response.params['paid_amount'].to_f / 100)
+            elsif raw_capture_response.params['gross_amount'] # PayPal likes to return this (like 9.95)
+              raw_capture_response.params['gross_amount'].to_d
+            end
+
           end
         end
       end
