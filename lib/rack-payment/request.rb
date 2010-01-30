@@ -59,6 +59,7 @@ module Rack     #:nodoc:
       end
 
       def session
+        raise "Rack env['#{rack_session_variable}'] is nil.  Has a Rack::Session middleware be enabled?" if env[rack_session_variable].nil?
         env[rack_session_variable][session_variable] ||= {}
       end
 
