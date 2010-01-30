@@ -3,5 +3,5 @@
 webrat*
 doc
 .yardoc
-config/rack-payment.yml
+rack-payment.yml
 spec/rack-payment-specs.log

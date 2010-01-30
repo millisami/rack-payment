@@ -1,4 +1,13 @@
 class ProductsController < ApplicationController
+
+  # GET /products/1/buy
+  def buy
+    @product = Product.find params[:id]
+    payment.amount = @product.cost
+    # render :text => 'Payment Required', :status => :payment_required
+    head :payment_required
+  end
+
   # GET /products
   # GET /products.xml
   def index

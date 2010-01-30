@@ -174,7 +174,7 @@ describe Rack::Payment, 'configuration' do
     ActiveMerchant::Billing::Base.mode.should == :production
 
     # by default, if you don't pass a mode, it doesn't change the mode
-    Rack::Payment.new(nil, :gateway => 'bogus' )
+    Rack::Payment.new(nil, :gateway => 'bogus')
     ActiveMerchant::Billing::Base.mode.should == :production
   end
 
