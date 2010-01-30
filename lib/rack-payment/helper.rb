@@ -30,6 +30,14 @@ module Rack     #:nodoc:
 
       attr_accessor :rack_payment, :amount, :credit_card, :billing_address, :errors, :use_express, :response
 
+      # Specifies what page to render if payment fails (for this specific request).
+      # To set this option globally, see {Rack::Payment#on_error}.
+      attr_accessor :on_error
+
+      # Specifies what page to render if payment succeeds (for this specific request).
+      # To set this option globally, see {Rack::Payment#on_success}.
+      attr_accessor :on_success
+
       # @param [Rack::Payment]
       def initialize rack_payment
         @rack_payment = rack_payment

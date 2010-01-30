@@ -5,10 +5,22 @@
 <head>
   <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
   <title>Rack::Payment Rails Example</title>
-  <%= stylesheet_link_tag 'scaffold' %>
+  <style type="text/css">
+    body{
+      background-color: gray;
+      padding:          1em;
+    }
+    #content {
+      background-color: white;
+      border:           1px solid black;
+      padding:          1em;
+    }
+  </style>
 </head>
 <body>
-<h1>Rack::Payment - Rails Example</h1>
-<%= yield %>
+  <div id="content">
+    <h1>Rack::Payment - Rails Example</h1>
+    <%= yield %>
+  </div>
 </body>
 </html>

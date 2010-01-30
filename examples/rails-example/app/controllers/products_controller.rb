@@ -1,27 +1,24 @@
 class ProductsController < ApplicationController
 
-  before_filter :get_product
-
-  def buy_using_default_page
+  # GET /products/1/buy
+  def buy
+    @product = Product.find(params[:id]) if params[:id]
     payment.amount = @product.cost
+  end
+
+  # POST /products/1/purchase
+  def purchase
+    @product = Product.find(params[:id]) if params[:id]
+    payment.amount     = @product.cost
+    payment.on_error   = buy_product_path(@product)
+    payment.on_success = confirmation_product_path(@product)
     head :payment_required
   end
 
-  def buy_using_default_page_in_our_layout
-    payment.amount = @product.cost
-    payment.credit_card.update     params[:credit_card]     if params[:credit_card]
-    payment.billing_address.update params[:billing_address] if params[:billing_address]
-
-    if request.request_method == :get
-      render :text => payment.form(:auth_token => form_authenticity_token), :layout => true
-    else
-      head :payment_required
-    end
+  # GET /products/1/confirmation
+  def confirmation
+    @product = Product.find(params[:id]) if params[:id]
   end
-
-  alias buy buy_using_default_page_in_our_layout
-
-# Custom actions ABOVE here
 
   # GET /products
   # GET /products.xml
@@ -105,12 +102,6 @@ class ProductsController < ApplicationController
       format.html { redirect_to(products_url) }
       format.xml  { head :ok }
     end
-  end
-
-protected
-
-  def get_product
-    @product = Product.find(params[:id]) if params[:id]
   end
 
 end

@@ -45,6 +45,7 @@ module Rack #:nodoc:
     #
     DEFAULT_OPTIONS = {
       'on_success'            => nil,
+      'on_error'              => nil,
       'built_in_form_path'    => '/rack.payment/process',
       'express_ok_path'       => '/rack.payment/express.callback/ok',
       'express_cancel_path'   => '/rack.payment/express.callback/cancel',
@@ -67,10 +68,15 @@ module Rack #:nodoc:
       @logger ||= Rack::Payment.logger
     end
 
-    # When a payment is successful, we redirect to this path, if set.
+    # When a payment is successful, we render this path, if set.
     # If this is `nil`, we display our own confirmation page.
     # @return [String, nil] (nil)
     attr_accessor :on_success
+
+    # When a payment is unsuccessful, we render this path, if set.
+    # If this is `nil`, we render the URL that the POST came from.
+    # @return [String, nil] (nil)
+    attr_accessor :on_error
 
     # This is the path that the built-in form POSTs to when submitting 
     # Credit Card data.  This is only used if you use the built_in_form.

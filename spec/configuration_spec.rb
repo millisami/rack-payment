@@ -2,9 +2,15 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe Rack::Payment, 'configuration' do
 
+  before do
+    ENV["RACK_ENV"]  = nil
+    ENV["RAILS_ENV"] = nil
+  end
+
   after do
     ActiveMerchant::Billing::Base.mode = :test
-    ENV["RACK_ENV"] = 'test' # just incase we mess it up
+    ENV["RACK_ENV"]  = 'test' # just incase we mess it up
+    ENV["RAILS_ENV"] = 'test' # just incase we mess it up
   end
 
   def can_get_and_set_attribute name, default = nil, value = '/foo'
@@ -129,6 +135,10 @@ describe Rack::Payment, 'configuration' do
 
   it 'can set the path to be used on_success' do
     can_get_and_set_attribute :on_success
+  end
+
+  it 'can set the path to be used on_error' do
+    can_get_and_set_attribute :on_error
   end
 
   it 'can set the path that the built-in credit card / billing address form POSTs to' do

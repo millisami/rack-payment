@@ -9,10 +9,9 @@ module Rack     #:nodoc:
     class Request
       extend Forwardable
 
-      def_delegators :payment_instance, :app, :gateway, :express_gateway, :on_success, :built_in_form_path, 
+      def_delegators :payment_instance, :app, :gateway, :express_gateway, :built_in_form_path, 
                                         :env_instance_variable, :env_helper_variable, :session_variable,
-                                        :rack_session_variable, :express_ok_path, :express_cancel_path,
-                                        :built_in_form_path
+                                        :rack_session_variable, :express_ok_path, :express_cancel_path
       
       def_delegators :request, :params
 
@@ -94,6 +93,7 @@ module Rack     #:nodoc:
       #
       # @return [Array] A Rack response, eg. `[200, {}, ["Hello World"]]`
       def finish
+        update_credit_card_and_billing_address_from_params
 
         # The application returned a 402 ('Payment Required')
         if app_response.status == 402
@@ -123,11 +123,12 @@ module Rack     #:nodoc:
         app_response.finish
       end
 
-      # Gets parameters, attempts an #authorize call, attempts a #capture call, 
-      # and renders the results.
-      def process_credit_card
-        payment.amount ||= amount_in_session
-
+      # If the params include fields that start with credit_card_ or 
+      # the params have a hash of credit card variables, we use them 
+      # to update our credit card information.
+      #
+      # We do the same with the billing address.
+      def update_credit_card_and_billing_address_from_params
         # The params *should* be set on the payment data object, but we accept 
         # POST requests too, so we check the POST variables for credit_card 
         # or billing_address fields
@@ -149,6 +150,14 @@ module Rack     #:nodoc:
         if params['billing_address'] and params['billing_address'].respond_to?(:each)
           payment.billing_address.update params['billing_address']
         end
+      end
+
+      # Gets parameters, attempts an #authorize call, attempts a #capture call, 
+      # and renders the results.
+      def process_credit_card
+        payment.amount ||= amount_in_session
+
+        update_credit_card_and_billing_address_from_params
 
         # Purchase!
         if payment.purchase(:ip => request.ip)
@@ -183,34 +192,42 @@ module Rack     #:nodoc:
           # so we can actually just re-call the same env (should display the form) using a GET
           payment.errors = errors
           new_env = env.clone
+          cleanup_env_for_rails(new_env)
           new_env['REQUEST_METHOD'] = 'GET'
 
-          # Rails keeps track of its own Request/Response.
-          #
-          # If we're using Rails, we need to delete these variables 
-          # to trick Rails into thinking that this is a new request.
-          #
-          # Kind of icky!
-          new_env.delete 'action_controller.rescue.request'
-          new_env.delete 'action_controller.rescue.response'
+          if request.path_info == express_ok_path # if express, we render on_success
+            new_env['PATH_INFO'] = (payment.on_success || payment_instance.on_success)
+          elsif payment.on_error
+            new_env['PATH_INFO'] = payment.on_error # Specific to this request
+          elsif payment_instance.on_error
+            new_env['PATH_INFO'] = payment_instance.on_error # Global
+          end
 
-          new_env['PATH_INFO'] = on_success if request.path_info == express_ok_path # if express, we render on_success
           app.call(new_env)
         end
       end
 
+      # Rails keeps track of its own Request/Response.
+      #
+      # If we're using Rails, we need to delete these variables 
+      # to trick Rails into thinking that this is a new request.
+      #
+      # Kind of icky!
+      def cleanup_env_for_rails new_env
+        new_env.delete 'action_controller.rescue.request'
+        new_env.delete 'action_controller.rescue.response'
+        new_env.delete 'REQUEST_URI'
+      end
+
       def render_on_success
+        on_success = (payment.on_success || payment_instance.on_success)
+
         if on_success
           # on_success is overriden ... we #call the main application using the on_success path
           new_env = env.clone
+          cleanup_env_for_rails(new_env)
           new_env['PATH_INFO']      = on_success
           new_env['REQUEST_METHOD'] = 'GET'
-
-          # For Rails
-          new_env.delete 'action_controller.rescue.request'
-          new_env.delete 'action_controller.rescue.response'
-          new_env.delete 'REQUEST_URI'
-
           app.call new_env
         else
           # on_success has not been overriden ... let's just display out own info

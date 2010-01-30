@@ -1,4 +1,11 @@
-ENV['RACK_ENV'] ||= 'test'
+ENV['RACK_ENV']  ||= 'test'
+ENV["RAILS_ENV"] ||= 'test'
+
+# Rails wnats to be loaded before anything else because it's selfish
+require File.dirname(__FILE__) + '/../examples/rails-example/config/environment'
+require File.dirname(__FILE__) + '/../examples/rails-example/db/migrate/20100129225010_create_products'
+CreateProducts.migrate :up
+RAILS_APP = ActionController::Dispatcher.new
 
 require File.dirname(__FILE__) + '/../lib/rack/payment'
 require File.dirname(__FILE__) + '/../lib/rack/payment/test'
