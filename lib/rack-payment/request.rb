@@ -183,8 +183,20 @@ module Rack     #:nodoc:
           payment.errors = errors
           new_env = env.clone
           new_env['REQUEST_METHOD'] = 'GET'
+
+          # Rails keeps track of its own Request/Response.
+          #
+          # If we're using Rails, we need to delete these variables 
+          # to trick Rails into thinking that this is a new request.
+          #
+          # Kind of icky!
+          new_env.delete 'action_controller.rescue.request'
+          new_env.delete 'action_controller.rescue.response'
+
           new_env['PATH_INFO'] = on_success if request.path_info == express_ok_path # if express, we render on_success
-          app.call(new_env)
+          resp = app.call(new_env)
+          puts resp.inspect
+          resp
         end
       end
 

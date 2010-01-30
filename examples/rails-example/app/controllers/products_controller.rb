@@ -1,15 +1,22 @@
 class ProductsController < ApplicationController
 
+  before_filter :get_product
+
   def buy_using_default_page
-    @product = Product.find params[:id]
     payment.amount = @product.cost
     head :payment_required
   end
 
   def buy_using_default_page_in_our_layout
-    @product = Product.find params[:id]
     payment.amount = @product.cost
-    render :text => payment.form(:auth_token => form_authenticity_token), :layout => true
+    payment.credit_card.update     params[:credit_card]     if params[:credit_card]
+    payment.billing_address.update params[:billing_address] if params[:billing_address]
+
+    if request.request_method == :get
+      render :text => payment.form(:auth_token => form_authenticity_token), :layout => true
+    else
+      head :payment_required
+    end
   end
 
   alias buy buy_using_default_page_in_our_layout
@@ -99,4 +106,11 @@ class ProductsController < ApplicationController
       format.xml  { head :ok }
     end
   end
+
+protected
+
+  def get_product
+    @product = Product.find(params[:id]) if params[:id]
+  end
+
 end
