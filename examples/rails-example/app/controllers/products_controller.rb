@@ -1,12 +1,20 @@
 class ProductsController < ApplicationController
 
-  # GET /products/1/buy
-  def buy
+  def buy_using_default_page
     @product = Product.find params[:id]
     payment.amount = @product.cost
-    # render :text => 'Payment Required', :status => :payment_required
     head :payment_required
   end
+
+  def buy_using_default_page_in_our_layout
+    @product = Product.find params[:id]
+    payment.amount = @product.cost
+    render :text => payment.form(:auth_token => form_authenticity_token), :layout => true
+  end
+
+  alias buy buy_using_default_page_in_our_layout
+
+# Custom actions ABOVE here
 
   # GET /products
   # GET /products.xml

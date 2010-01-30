@@ -20,7 +20,8 @@ class MyMiddleware
 end
 
 Rails::Initializer.run do |config|
-  config.gem 'rack-payment'
+  # config.gem 'rack-payment'
+  require Rails.root.join('..', '..', 'lib', 'rack-payment')
   config.time_zone = 'UTC'
 
   config.after_initialize do
