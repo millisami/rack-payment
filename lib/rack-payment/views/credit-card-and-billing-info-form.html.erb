@@ -1,6 +1,5 @@
 <%
-  # TODO use helper for select options for credit card type
-  # TODO use helper for select options for expiration
+  @fields = fields # so we don't recreate the fields abunchof times
 %>
 
 <div class='rack-payment'>
@@ -21,31 +20,25 @@
 
       <div class='group'>
         <label for='credit_card_first_name'>First Name</label>
-        <input type='text' id='credit_card_first_name' name='credit_card[first_name]' value='<%= credit_card.first_name %>' autofocus='true' />
+        <%= @fields.credit_card.first_name %>
 
         <label for='credit_card_last_name'>Last Name</label>
-        <input type='text' id='credit_card_last_name' name='credit_card[last_name]' value='<%= credit_card.last_name %>' />
+        <%= @fields.credit_card.last_name %>
 
         <label for='credit_card_number'>Card Number</label>
-        <input type='text' id='credit_card_number' name='credit_card[number]' value='<%= credit_card.number %>' autocomplete='off' />
+        <%= @fields.credit_card.number %>
       </div>
 
       <div class='group'>
         <label for='credit_card_type'>Card Type</label>
-        <select id='credit_card_type' name='credit_card[type]' />
-          <%= options_for_credit_card_type credit_card.type %>
-        </select>
+        <%= @fields.credit_card.type %>
 
         <label for='credit_card_cvv'>CVV</label>
-        <input type='text' id='credit_card_cvv' name='credit_card[cvv]' value='<%= credit_card.cvv %>' autocomplete='off' />
+        <%= @fields.credit_card.cvv %>
 
         <label for='credit_card_expiration_month'>Expiration</label>
-        <select id='credit_card_expiration_month' name='credit_card[expiration_month]'>
-          <%= options_for_expiration_month credit_card.month %>
-        </select>
-        <select id='credit_card_expiration_year' name='credit_card[expiration_year]'>
-          <%= options_for_expiration_year credit_card.year %>
-        </select>
+        <%= @fields.credit_card.expiration_month %>
+        <%= @fields.credit_card.expiration_year %>
 
       </div>
     </fieldset>
@@ -55,24 +48,24 @@
 
       <div class='group'>
         <label for='billing_address_name'>Full Name</label>
-        <input type='text' id='billing_address_name' name='billing_address[name]' value='<%= billing_address.name %>' />
+        <%= @fields.billing_address.name %>
 
         <label for='billing_address_address1'>Address</label>
-        <input type='text' id='billing_address_address1' name='billing_address[address1]' value='<%= billing_address.address1 %>' />
+        <%= @fields.billing_address.address1 %>
 
         <label for='billing_address_city'>City</label>
-        <input type='text' id='billing_address_city' name='billing_address[city]' value='<%= billing_address.city %>' />
+        <%= @fields.billing_address.city %>
       </div>
 
       <div class='group'>
         <label for='billing_address_state'>State</label>
-        <input type='text' id='billing_address_state' name='billing_address[state]' value='<%= billing_address.state %>' />
+        <%= @fields.billing_address.state %>
 
         <label for='billing_address_country'>Country</label>
-        <input type='text' id='billing_address_country' name='billing_address[country]' value='<%= billing_address.country %>' />
+        <%= @fields.billing_address.country %>
 
         <label for='billing_address_zip'>Zip</label>
-        <input type='text' id='billing_address_zip' name='billing_address[zip]' value='<%= billing_address.zip %>' />
+        <%= @fields.billing_address.zip %>
       </div>
     </fieldset>
 

@@ -33,6 +33,9 @@ module Rack     #:nodoc:
       def address()       address1              end
       def address=(value) self.address1=(value) end
 
+      def full_name()       name              end
+      def full_name=(value) self.name=(value) end
+
       # Returns a hash that can be passed to a Gateway#authorize call
       def active_merchant_hash
         { 

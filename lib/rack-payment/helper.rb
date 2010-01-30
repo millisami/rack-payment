@@ -218,6 +218,74 @@ module Rack     #:nodoc:
           end
         }.join
       end
+
+      def credit_card_values
+        %w( first_name last_name number cvv type expiration_month expiration_year ).inject({}) do |all, attribute|
+          all[attribute.to_sym] = credit_card[attribute.to_sym]
+          all
+        end
+      end
+
+      def billing_address_values
+        %w( name address1 city state zip country ).inject({}) do |all, attribute|
+          all[attribute.to_sym] = billing_address[attribute.to_sym]
+          all
+        end
+      end
+
+      # @return Hash of HTML fields with their values set
+      def fields values = nil
+        values ||= {}
+        values[:credit_card]     = credit_card_values.merge(     values[:credit_card]     || {} )
+        values[:billing_address] = billing_address_values.merge( values[:billing_address] || {} )
+
+        CallableHash.new({
+          :credit_card => CallableHash.new({
+            :first_name       => input_tag(  :credit_card, :first_name,       values[:credit_card][:first_name],  :autofocus => true),
+            :last_name        => input_tag(  :credit_card, :last_name,        values[:credit_card][:last_name]),
+            :number           => input_tag(  :credit_card, :number,           values[:credit_card][:number],      :autocomplete => 'off'),
+            :cvv              => input_tag(  :credit_card, :cvv,              values[:credit_card][:cvv],         :autocomplete => 'off'),
+            :type             => select_tag( :credit_card, :type,             values[:credit_card][:type]),
+            :expiration_month => select_tag( :credit_card, :expiration_month, values[:credit_card][:expiration_month]),
+            :expiration_year  => select_tag( :credit_card, :expiration_year,  values[:credit_card][:expiration_year])
+          }),
+
+          :billing_address => CallableHash.new({
+            :name     => input_tag(:billing_address, :name,     values[:billing_address][:name]),
+            :address1 => input_tag(:billing_address, :address1, values[:billing_address][:address1]),
+            :city     => input_tag(:billing_address, :city,     values[:billing_address][:city]),
+            :state    => input_tag(:billing_address, :state,    values[:billing_address][:state]),
+            :zip      => input_tag(:billing_address, :zip,      values[:billing_address][:zip]),
+            :country  => input_tag(:billing_address, :country,  values[:billing_address][:country])
+          })
+        })
+      end
+
+      def select_tag object, property, value = nil, options = nil
+        attributes = { :type => 'text', :id => "#{object}_#{property}", :name => "#{object}[#{property}]" }
+        attributes.merge!(options) if options
+
+        case property
+        when :type
+          options = options_for_credit_card_type(value)
+        when :expiration_month
+          options = options_for_expiration_month(value)
+        when :expiration_year
+          options = options_for_expiration_year(value)
+        end
+
+        "<select #{ attributes.map {|name, value| "#{name}='#{value}'" }.join(' ') }>#{ options }</select>"
+      end
+
+      # Returns the HTML for an <input /> element
+      # @return String
+      def input_tag object, property, value = nil, options = nil
+        attributes = { :type => 'text', :id => "#{object}_#{property}", :name => "#{object}[#{property}]" }
+        attributes[:value] = value if value.present?
+        attributes.merge!(options) if options
+
+        "<input #{ attributes.map {|name, value| "#{name}='#{value}'" }.join(' ') } />"
+      end
     end
 
   end
