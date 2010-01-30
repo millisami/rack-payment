@@ -1,5 +1,16 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
+describe Rack::Payment::Helper, '#form' do
+
+  # <input name='authenticity_token' type='hidden' value='...' />
+  it 'should be able to specify :auth_token' do
+    payment = Rack::Payment.new.payment
+    payment.form.should_not                    include("name='authenticity_token'", "value='1234'")
+    payment.form(:auth_token => '1234').should include("name='authenticity_token'", "value='1234'")
+  end
+
+end
+
 describe Rack::Payment::Helper, '#fields' do
 
   it 'should be able to get a credit card field (without a value)' do

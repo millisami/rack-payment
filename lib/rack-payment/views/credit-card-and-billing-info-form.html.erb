@@ -15,6 +15,9 @@
   <% end %>
 
   <form action='<%= post_to %>' method='post'>
+    <% if auth_token %>
+    <input name='authenticity_token' type='hidden' value='<%= auth_token %>' />
+    <% end %>
     <fieldset>
       <legend>Credit Card</legend>
 

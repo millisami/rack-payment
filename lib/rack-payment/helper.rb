@@ -175,7 +175,11 @@ module Rack     #:nodoc:
       # By default, the form will POST to the current URL (action='')
       #
       # You can pass a different URL for the form action
-      def form post_to = '', options = nil
+      def form options = nil
+        options ||= {}
+        post_to    = (options[:post_to] ||= '') # the url/path to post to
+        auth_token = options[:auth_token]       # if not nil, we include the authenticity_token in the form
+
         view = ::File.dirname(__FILE__) + '/views/credit-card-and-billing-info-form.html.erb'
         erb  = ::File.read view
         html = ''
