@@ -205,6 +205,12 @@ module Rack     #:nodoc:
           new_env = env.clone
           new_env['PATH_INFO']      = on_success
           new_env['REQUEST_METHOD'] = 'GET'
+
+          # For Rails
+          new_env.delete 'action_controller.rescue.request'
+          new_env.delete 'action_controller.rescue.response'
+          new_env.delete 'REQUEST_URI'
+
           app.call new_env
         else
           # on_success has not been overriden ... let's just display out own info
