@@ -209,7 +209,7 @@ module Rack     #:nodoc:
           app.call new_env
         else
           # on_success has not been overriden ... let's just display out own info
-          [ 200, {}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
+          [ 200, {'Content-Type' => 'text/html'}, ["Order successful.  You should have been charged #{ payment.amount }" ]]
         end
       end
 
