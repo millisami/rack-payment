@@ -28,7 +28,7 @@
         <input type='text' id='credit_card_last_name' name='credit_card[last_name]' value='<%= credit_card.last_name %>' />
 
         <label for='credit_card_number'>Card Number</label>
-        <input type='text' id='credit_card_number' name='credit_card[number]' value='<%= credit_card.number %>' />
+        <input type='text' id='credit_card_number' name='credit_card[number]' value='<%= credit_card.number %>' autocomplete='off' />
       </div>
 
       <div class='group'>
@@ -38,7 +38,7 @@
         </select>
 
         <label for='credit_card_cvv'>CVV</label>
-        <input type='text' id='credit_card_cvv' name='credit_card[cvv]' value='<%= credit_card.cvv %>' />
+        <input type='text' id='credit_card_cvv' name='credit_card[cvv]' value='<%= credit_card.cvv %>' autocomplete='off' />
 
         <label for='credit_card_expiration_month'>Expiration</label>
         <select id='credit_card_expiration_month' name='credit_card[expiration_month]'>
@@ -66,10 +66,14 @@
       </div>
 
       <div class='group'>
-        <% %w( state country zip ).each do |field| %>
-          <label for='billing_address_<%= field %>'><%= field.gsub('_', ' ').capitalize %></label>
-          <input type='text' id='billing_address_<%= field %>' name='billing_address[<%= field %>]' value='<%= billing_address[field] %>' />
-        <% end %>
+        <label for='billing_address_state'>State</label>
+        <input type='text' id='billing_address_state' name='billing_address[state]' value='<%= billing_address.state %>' />
+
+        <label for='billing_address_country'>Country</label>
+        <input type='text' id='billing_address_country' name='billing_address[country]' value='<%= billing_address.country %>' />
+
+        <label for='billing_address_zip'>Zip</label>
+        <input type='text' id='billing_address_zip' name='billing_address[zip]' value='<%= billing_address.zip %>' />
       </div>
     </fieldset>
 
