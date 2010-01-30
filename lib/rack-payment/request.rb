@@ -208,7 +208,7 @@ module Rack     #:nodoc:
         html      = ::File.read(layout)
         html      = html.sub 'CONTENT', form_html
 
-        [ 200, {'Content-Type' => 'text/html'}, html ]
+        [ 200, {'Content-Type' => 'text/html'}, [html] ]
       end
 
       def process_express_payment_callback
