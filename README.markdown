@@ -1,6 +1,8 @@
 Rack::Payment
 =============
 
+*View the documentation at: [http://yardoc.org/docs/frames/devfu-rack-payment](http://yardoc.org/docs/frames/devfu-rack-payment)*
+
 {Rack::Payment} is a [Rack][] middleware for requiring single payments 
 from your Ruby web applications.
 
