@@ -195,9 +195,7 @@ module Rack     #:nodoc:
           new_env.delete 'action_controller.rescue.response'
 
           new_env['PATH_INFO'] = on_success if request.path_info == express_ok_path # if express, we render on_success
-          resp = app.call(new_env)
-          puts resp.inspect
-          resp
+          app.call(new_env)
         end
       end
 
