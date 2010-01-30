@@ -6,12 +6,17 @@ module Rack     #:nodoc:
     #
     # {Rack::Payment::Helper} is the main API for working with {Rack::Payment}.  You use it to:
     # 
-    #  * Set the {#amount} you want to charge someone
-    #  * Spit out the HTML for a credit card / billing information {#form} into your own application
-    #  * Set the {#credit_card} and {#billing_address} to be used when processing the payment
-    #  * Get {#errors} if something didn't work
-    #  * Get the {#response} from your billing gateway after charging (or attempting to charge) someone
-    #  * Get the URL to the image for a {#paypal_express_button}
+    # Set the {#amount} you want to charge someone
+    #
+    # Spit out the HTML for a credit card / billing information {#form} into your own application
+    #
+    # Set the {#credit_card} and {#billing_address} to be used when processing the payment
+    #
+    # Get {#errors} if something didn't work
+    #
+    # Get the {#response} from your billing gateway after charging (or attempting to charge) someon
+    #
+    # Get the URL to the image for a {#paypal_express_button}
     #
     class Helper
       extend Forwardable

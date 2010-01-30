@@ -90,6 +90,9 @@ you want to charge the user and then you return a [402 Payment Required][code] r
 
 That's it!  Your user will be redirected to a page where they can fill out their credit card & billing address!
 
+The `payment` object that is made available by {Rack::Payment::Methods} is an instance of {Rack::Payment::Helper} and 
+it is your primary "API" for interacting with {Rack::Payment}.
+
 ### Order Confirmation
 
 By default, the user will be redirected to a simple page after the purchase goes through that merely says:
