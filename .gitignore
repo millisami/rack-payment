@@ -2,6 +2,8 @@
 *.sw?
 webrat*
 doc
+bin
 .yardoc
 rack-payment.yml
 spec/rack-payment-specs.log
+vendor/gems

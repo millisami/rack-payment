@@ -27,10 +27,11 @@ describe Rack::Payment::Helper, '#fields' do
     
     payment.fields[:credit_card][:last_name ].should_not include("autofocus=true") # it's not the first field in the form
 
-    payment.fields[:credit_card][:number].should include("<input type='text'",
-                                                             "autocomplete='off'", 
-                                                             "name='credit_card[number]'",
-                                                             "id='credit_card_number'")
+    payment.fields[:credit_card][:number].should include("<input",
+                                                         " type='text'",
+                                                         "autocomplete='off'", 
+                                                         "name='credit_card[number]'",
+                                                         "id='credit_card_number'")
 
     payment.fields[:credit_card][:last_name ].should_not include("autocomplete='off'") # it's not a secure field
     payment.fields[:credit_card][:cvv       ].should     include("autocomplete='off'") # it is another secure field
