@@ -1,0 +1,7 @@
+test: 
+  gateway:   bogus
+  test_mode: true
+
+development: 
+  gateway:   bogus
+  test_mode: true
