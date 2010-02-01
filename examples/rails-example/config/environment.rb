@@ -12,6 +12,7 @@ Rails::Initializer.run do |config|
   config.time_zone = 'UTC'
 
   config.after_initialize do
+     Rack::Payment.yml_file_names << Rails.root.join('config', 'rack-payment.yml')
     config.middleware.use Rack::Payment
   end
 end
