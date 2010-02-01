@@ -8,6 +8,9 @@ only :test do
   gem 'rack-test'
   gem 'webrat'
   gem 'fakeweb'
+  gem 'rails',  '= 2.3.5'
+  gem 'sinatra'
+  gem 'haml'
 end
 
 # vim:set ft=ruby:
