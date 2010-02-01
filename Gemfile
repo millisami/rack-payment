@@ -5,4 +5,9 @@ gem 'activemerchant'
 
 only :test do
   gem 'rspec'
+  gem 'rack-test'
+  gem 'webrat'
+  gem 'fakeweb'
 end
+
+# vim:set ft=ruby:
