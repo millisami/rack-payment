@@ -1,7 +1,8 @@
 desc 'Runs specs'
 task :spec do
+  dir = File.dirname(__FILE__)
   system 'gem bundle'
-  exec "spec -c -f specdoc #{ File.dirname(__FILE__) + '/spec' }"
+  exec "#{ dir }/vendor/bin/spec -c -f specdoc #{ dir }/spec"
 end
 
 desc 'Runs specs (default)'
