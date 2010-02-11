@@ -16,7 +16,7 @@ module Rack     #:nodoc:
       # and {Rack::Payment#decrypt} using {Rack::Payment#encryption_key}.
       attr_accessor :rack_payment_instance
 
-      def initialize instance, rack_payment_instance = Rack::Payment.new
+      def initialize instance, rack_payment_instance = Rack::Payment.instance
         @instance              = instance
         @rack_payment_instance = rack_payment_instance
         check_for_required_fields!

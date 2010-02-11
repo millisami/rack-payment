@@ -32,9 +32,29 @@ module Rack #:nodoc:
       #
       # @return [Logger]
       attr_accessor :logger
+
+      # Tracks all of the launched {Rack::Payment} instances, 
+      # providing a singleton-esque way of accessing the last {#instance}.
+      # @return [Array(Rack::Payment)]
+      attr_accessor :instances
     end
 
+    @instances = []
+
     @yml_file_names = YML_FILE_NAMES
+
+    # Returns the latest {Rack::Payment} instantiated.
+    # If more than 1 instance of {Rack::Payment} has been 
+    # instantiated, this blows up!  We want there to only 
+    # be 1 {Rack::Payment} in a given process when we use this.
+    # @return [Rack::Payment]
+    def self.instance
+      if instances.length <= 1
+        instances.first
+      else
+        raise Exception, "More than one instance of Rack::Payment has been instantiated!"
+      end
+    end
 
     # These are the default values that we use to set the Rack::Payment attributes.
     #
@@ -224,6 +244,9 @@ module Rack #:nodoc:
 
       # Now we check to see if the gateway is OK
       raise ArgumentError, 'You must pass a valid Gateway'          unless @gateway_type and gateway.is_a?(ActiveMerchant::Billing::Gateway)
+
+      # If all is well, add the instance to Rack::Payment.instances
+      Rack::Payment.instances << self
     end
 
     # The main Rack #call method required by every Rack application / middleware.

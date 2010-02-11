@@ -31,7 +31,7 @@ module Rack     #:nodoc:
       # If the payment is processed OK, the payment should be deleted from 
       # the queue (scheduled_payments) and added to completed_payments.
       def process_due_payment! payment
-        rack_payment = Rack::Payment.new.payment # TODO be able to override the Rack::Payment instance!
+        rack_payment = Rack::Payment.instance.payment
         rack_payment.amount      = payment.amount
         rack_payment.credit_card = credit_card # use the encrypted credit card
         rack_payment.purchase :ip => '127.0.0.1'
@@ -40,6 +40,7 @@ module Rack     #:nodoc:
                                               :due_at   => payment.due_at,
                                               :success  => rack_payment.success?,
                                               :response => rack_payment.response
+        # TODO add amount_paid
         payment.destroy
         completed
       end

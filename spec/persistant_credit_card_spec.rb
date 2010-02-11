@@ -1,8 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-%w( rubygems dm-core dm-aggregates rack-payment/billable/datamapper ).each {|lib| require lib }
-DataMapper.setup :default, 'sqlite3::memory:'
-
 class DataMapperUser
   include DataMapper::Resource
   include Rack::Payment::Billable::DataMapper
@@ -20,6 +17,11 @@ DataMapper.auto_upgrade!
 # we'll figure it out more as we use it more ...
 
 describe 'Persistant Credit Card' do
+
+  before do
+    Rack::Payment.instances.clear
+    Rack::Payment.new nil, :gateway => 'bogus' # instantiate one ... which the user's application would do!
+  end
 
   describe 'DataMapper' do
 
