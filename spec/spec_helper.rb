@@ -9,7 +9,7 @@ RAILS_APP = ActionController::Dispatcher.new
 
 require File.dirname(__FILE__) + '/../lib/rack/payment'
 require File.dirname(__FILE__) + '/../lib/rack/payment/test'
-%w( rubygems spec rack/test webrat fakeweb sinatra/base tempfile ).each {|lib| require lib }
+%w( rubygems spec rack/test webrat fakeweb sinatra/base tempfile time ).each {|lib| require lib }
 
 Dir[File.dirname(__FILE__) + '/support/**/*.rb'].each     {|support| require support }
 Dir[File.dirname(__FILE__) + '/../examples/*.rb'].each {|example| require example }

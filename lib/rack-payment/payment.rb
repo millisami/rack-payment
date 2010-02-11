@@ -52,7 +52,8 @@ module Rack #:nodoc:
       'env_instance_variable' => 'rack.payment',
       'env_helper_variable'   => 'rack.payment.helper',
       'session_variable'      => 'rack.payment',
-      'rack_session_variable' => 'rack.session'
+      'rack_session_variable' => 'rack.session',
+      'encryption_key'        => '123! Rack::Payment secret encryption key 123!'
     }
 
     # The {Rack} application that this middleware was instantiated with
@@ -119,6 +120,11 @@ module Rack #:nodoc:
     # eg. `rack.session` (the default for Rack::Session::Cookie)
     # @return [String]
     attr_accessor :rack_session_variable
+
+    # TODO update the documentation for this!
+    # This is the encryption key used to encrypt/decrypt credit card information 
+    # when you include {Rack::Payment::???}
+    attr_accessor :encryption_key
 
     # The name of a type of ActiveMerchant::Billing::Gateway that we 
     # want to use, eg. 'paypal'.  We use this to get the actual 
@@ -260,6 +266,28 @@ module Rack #:nodoc:
     # @return [Rack::Payment::Helper]
     def payment
       Rack::Payment::Helper.new(self)
+    end
+
+    # Encrypts the given text using {#encryption_key}
+    def encrypt text, key = encryption_key
+      aes :encrypt, key, text.to_s
+    end
+
+    # Decrypts the given text using {#encryption_key}
+    def decrypt text, key = encryption_key
+      aes :decrypt, key, text.to_s
+    end
+
+  private
+
+    # Helper method for AES256 encryption using OpenSSL
+    #
+    # See {#encrypt} and {#decrypt} for usage
+    def aes(m,k,t)
+      require 'openssl'     unless defined? OpenSSL::Cipher::Cipher
+      require 'digest/sha2' unless defined? Digest::SHA256
+      (aes = OpenSSL::Cipher::Cipher.new('aes-256-cbc').send(m)).key = Digest::SHA256.digest(k)
+      aes.update(t) << aes.final
     end
 
   end

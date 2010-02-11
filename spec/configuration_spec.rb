@@ -169,6 +169,10 @@ describe Rack::Payment, 'configuration' do
     can_get_and_set_attribute :rack_session_variable, 'rack.session'
   end
 
+  it 'can set the encryption_key to use for encrypting credit card information' do
+    can_get_and_set_attribute :encryption_key, '123! Rack::Payment secret encryption key 123!'
+  end
+
   it 'can set the path to the view to be rendered (credit card & billing info)'
 
   it 'can configure what the ActiveMerchant::Billing::Base.mode is set to via test_mode = true/false' do
