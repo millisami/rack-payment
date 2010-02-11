@@ -22,7 +22,7 @@ module Rack     #:nodoc:
       #
       # @param [Float] The amount due
       # @param [DateTime] When the payment is due (when it should be processed)
-      def schedule_payment! amount, due_at
+      def schedule_payment! amount, due_at = Time.now
         scheduled_payments.create :amount => amount, :due_at => due_at
       end
 
