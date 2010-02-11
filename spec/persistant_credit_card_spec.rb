@@ -103,6 +103,18 @@ describe 'Persistant Credit Card' do
       @user.due_payments.count.should    == 0
     end
 
+    it 'should be able to make_payment! (immediately)' do
+      @user.scheduled_payments.count.should == 0
+      @user.completed_payments.count.should == 0
+
+      @user.make_payment! 1.23
+
+      @user.scheduled_payments.count.should == 0
+      @user.completed_payments.count.should == 1
+      payment = @user.completed_payments.first
+      payment.amount.should == 1.23
+    end
+
     it 'should be able to process payments for a particular user'
 
     it 'should be able to get successful / failed charges'

@@ -26,21 +26,29 @@ module Rack     #:nodoc:
         scheduled_payments.create :amount => amount, :due_at => due_at
       end
 
+      # Makes an payment immediately.
+      # 
+      # @param [Float] The amount due
+      def make_payment! amount, due_at = Time.now
+        rack_payment = Rack::Payment.instance.payment
+        rack_payment.amount      = amount
+        rack_payment.credit_card = credit_card # use the encrypted credit card
+        rack_payment.purchase :ip => '127.0.0.1'
+
+        # TODO add amount_paid (?)
+        completed = completed_payments.create :amount   => amount, 
+                                              :due_at   => due_at,
+                                              :success  => rack_payment.success?,
+                                              :response => rack_payment.response
+        completed
+      end
+
       # Process the given payment.  The completed payment should be returned.
       #
       # If the payment is processed OK, the payment should be deleted from 
       # the queue (scheduled_payments) and added to completed_payments.
       def process_due_payment! payment
-        rack_payment = Rack::Payment.instance.payment
-        rack_payment.amount      = payment.amount
-        rack_payment.credit_card = credit_card # use the encrypted credit card
-        rack_payment.purchase :ip => '127.0.0.1'
-
-        completed = completed_payments.create :amount   => payment.amount, 
-                                              :due_at   => payment.due_at,
-                                              :success  => rack_payment.success?,
-                                              :response => rack_payment.response
-        # TODO add amount_paid
+        completed = make_payment! payment.amount, payment.due_at
         payment.destroy
         completed
       end
