@@ -24,8 +24,6 @@ describe 'Persistant Credit Card' do
   describe 'DataMapper' do
 
     before do
-      DataMapperUser.all.destroy
-
       DataMapperUser.count.should == 0
       @user = DataMapperUser.create :name => 'remi'
       DataMapperUser.count.should == 1
@@ -56,10 +54,46 @@ describe 'Persistant Credit Card' do
 
       scheduled_payment = @user.scheduled_payments.first
       scheduled_payment.amount.should    == 9.95
-      scheduled_payment.charge_at.should == Time.parse('01/31/2021') # next charge_at
+      scheduled_payment.due_at.should == Time.parse('01/31/2021') # next charge_at
     end
 
-    it 'should be able to process payments'
+    it 'should be able to process payments' do
+      DataMapperUser.future_payments.count.should == 0
+      DataMapperUser.due_payments.count.should    == 0
+
+      @user.schedule_payment! 9.95, Time.parse('01/31/2021')
+
+      @user.scheduled_payments.length.should == 1
+      DataMapperUser.future_payments.count.should == 1
+      DataMapperUser.due_payments.count.should    == 0
+
+      @user.schedule_payment! 1.23, Time.parse('01/31/2009') # past due
+
+      @user.scheduled_payments.length.should == 2
+      DataMapperUser.future_payments.count.should == 1
+      DataMapperUser.due_payments.count.should    == 1
+
+      @user.completed_payments.length.should == 0
+      payments = DataMapperUser.process_due_payments!
+      @user.reload
+      @user.completed_payments.length.should == 1
+
+      payments.length.should == 1
+      payments.first.amount.should == 1.23
+      payments.first.due_at.should == Time.parse('01/31/2009')
+
+      @user.completed_payments.length.should == 1
+      payment = @user.completed_payments.first
+      payment.amount.should == 1.23
+      payment.due_at.should == Time.parse('01/31/2009')
+      # other fields to check?  response and whatnot?
+
+      @user.scheduled_payments.length.should == 1
+      DataMapperUser.future_payments.count.should == 1
+      DataMapperUser.due_payments.count.should    == 0 # it has been processed!
+    end
+
+    it 'should be able to process payments for a particular user'
 
     it 'should be able to get successful / failed charges'
 

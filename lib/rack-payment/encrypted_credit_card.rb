@@ -4,9 +4,7 @@ module Rack     #:nodoc:
     # When you include {Rack::Payment::Billable}, 
     # the #credit_card method you get returns an 
     # instance of {EncryptedCreditCard}.
-    class EncryptedCreditCard
-
-      FIELDS = Rack::Payment::CreditCard::REQUIRED # shortcut alias to required CreditCard fields
+    class EncryptedCreditCard < CreditCard
 
       # The class instance (usually a DataMapper/ActiveRecord model) 
       # that this {EncryptedCreditCard} is wrapping.
@@ -28,7 +26,7 @@ module Rack     #:nodoc:
         # TODO write a spec fool!
       end
 
-      FIELDS.each do |field|
+      REQUIRED.each do |field|
         
         define_method(field) do
           value = instance.send("credit_card_#{field}")
