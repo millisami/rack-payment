@@ -62,18 +62,24 @@ describe 'Persistant Credit Card' do
     it 'should be able to process payments' do
       DataMapperUser.future_payments.count.should == 0
       DataMapperUser.due_payments.count.should    == 0
+      @user.future_payments.count.should == 0
+      @user.due_payments.count.should    == 0
 
       @user.schedule_payment! 9.95, Time.parse('01/31/2021')
 
       @user.scheduled_payments.length.should == 1
       DataMapperUser.future_payments.count.should == 1
       DataMapperUser.due_payments.count.should    == 0
+      @user.future_payments.count.should == 1
+      @user.due_payments.count.should    == 0
 
       @user.schedule_payment! 1.23, Time.parse('01/31/2009') # past due
 
       @user.scheduled_payments.length.should == 2
       DataMapperUser.future_payments.count.should == 1
       DataMapperUser.due_payments.count.should    == 1
+      @user.future_payments.count.should == 1
+      @user.due_payments.count.should    == 1
 
       @user.completed_payments.length.should == 0
       payments = DataMapperUser.process_due_payments!
@@ -93,6 +99,8 @@ describe 'Persistant Credit Card' do
       @user.scheduled_payments.length.should == 1
       DataMapperUser.future_payments.count.should == 1
       DataMapperUser.due_payments.count.should    == 0 # it has been processed!
+      @user.future_payments.count.should == 1
+      @user.due_payments.count.should    == 0
     end
 
     it 'should be able to process payments for a particular user'

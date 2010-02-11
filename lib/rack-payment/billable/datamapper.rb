@@ -25,6 +25,14 @@ module Rack         #:nodoc:
           property :amount,    Float
           property :due_at,    DateTime
           property :parent_id, Integer
+
+          def self.future current_time = Time.now
+            all :due_at.gt => current_time
+          end
+
+          def self.due current_time = Time.now
+            all :due_at.lte => current_time
+          end
         end
 
         class CompletedPayment
@@ -66,11 +74,11 @@ module Rack         #:nodoc:
         module ClassMethods
 
           def future_payments current_time = Time.now
-            ScheduledPayment.all :due_at.gt => current_time
+            ScheduledPayment.future
           end
 
           def due_payments current_time = Time.now
-            ScheduledPayment.all :due_at.lte => current_time
+            ScheduledPayment.due
           end
 
         end

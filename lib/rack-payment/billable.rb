@@ -44,6 +44,14 @@ module Rack     #:nodoc:
         payment.destroy
         completed
       end
+        
+      def future_payments current_time = Time.now
+        scheduled_payments.future
+      end
+
+      def due_payments current_time = Time.now
+        scheduled_payments.due
+      end
 
       module ClassMethods
         
