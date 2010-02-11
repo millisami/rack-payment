@@ -1,5 +1,6 @@
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
+# Move this out of here???  Used for continuous integration
 gem_bundler = File.dirname(__FILE__) + '/../vendor/gems/environment'
 require gem_bundler if File.file?(gem_bundler)
 
@@ -14,6 +15,8 @@ require 'rack-payment/billing_address'
 require 'rack-payment/helper'
 require 'rack-payment/methods'
 require 'rack-payment/billable'
-require 'rack-payment/billable/datamapper'
-require 'rack-payment/billable/activerecord'
 require 'rack-payment/encrypted_credit_card'
+
+# Helpers for particular Billable ORMs require explicit requirements
+# require 'rack-payment/billable/datamapper'
+# require 'rack-payment/billable/activerecord'

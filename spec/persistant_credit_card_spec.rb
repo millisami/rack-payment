@@ -1,13 +1,11 @@
 require File.dirname(__FILE__) + '/spec_helper'
 
-%w( rubygems dm-core dm-aggregates ).each {|lib| require lib }
-DataMapper.setup :testing, 'sqlite3::memory:'
+%w( rubygems dm-core dm-aggregates rack-payment/billable/datamapper ).each {|lib| require lib }
+DataMapper.setup :default, 'sqlite3::memory:'
 
 class DataMapperUser
   include DataMapper::Resource
   include Rack::Payment::Billable::DataMapper
-
-  def self.default_repository_name() :testing end
 
   property :id,   Serial
   property :name, String
@@ -26,7 +24,7 @@ describe 'Persistant Credit Card' do
   describe 'DataMapper' do
 
     before do
-      DataMapperUser.destroy_all!
+      DataMapperUser.all.destroy
 
       DataMapperUser.count.should == 0
       @user = DataMapperUser.create :name => 'remi'
