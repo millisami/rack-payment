@@ -250,6 +250,34 @@ module Rack     #:nodoc:
         end
       end
 
+      # @return [Array(String)] Array of the HTML fields for a credit card
+      def credit_card_fields values = nil
+        fields(values)[:credit_card].values
+      end
+
+      # @return [Array(String)] Array of the HTML fields for a credit card
+      def billing_address_fields values = nil
+        fields(values)[:billing_address].values
+      end
+
+      # @return [Array(String)] Array of the HTML fields for a credit card with label tags
+      def credit_card_fields_with_labels values = nil
+        fields(values)[:credit_card].inject([]) do |all, field|
+          field_name, field_html = field
+          all << "<label for='credit_card_#{ field_name }'>#{ field_name.to_s.titleize }</label>" + field_html
+          all
+        end
+      end
+
+      # @return [Array(String)] Array of the HTML fields for a credit card with label tags
+      def billing_address_fields_with_labels values = nil
+        fields(values)[:billing_address].inject([]) do |all, field|
+          field_name, field_html = field
+          all << "<label for='billing_address_#{ field_name }'>#{ field_name.to_s.titleize }</label>" + field_html
+          all
+        end
+      end
+
       # @return Hash of HTML fields with their values set
       def fields values = nil
         values ||= {}
